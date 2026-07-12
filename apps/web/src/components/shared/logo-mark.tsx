@@ -9,10 +9,9 @@ export function LogoMark({ className }: { className?: string }) {
         <Boxes className="size-5" />
       </div>
       <div>
-        <p className="text-xs font-semibold tracking-widest text-muted-foreground uppercase">
-          Asset Ops
+        <p className="text-xl font-semibold tracking-tight text-foreground">
+          AssetFlow
         </p>
-        <p className="text-lg font-semibold text-foreground">AssetFlow</p>
       </div>
     </div>
   );

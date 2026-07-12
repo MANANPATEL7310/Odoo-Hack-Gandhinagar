@@ -28,10 +28,7 @@ export function LandingFooter() {
                 <LayoutDashboard className="size-4" />
               </div>
               <div className="flex flex-col leading-none">
-                <span className="text-xs font-semibold tracking-widest text-primary uppercase">
-                  Enterprise ERP
-                </span>
-                <span className="text-base font-bold text-foreground">
+                <span className="text-xl font-bold tracking-tight text-foreground">
                   AssetFlow
                 </span>
               </div>

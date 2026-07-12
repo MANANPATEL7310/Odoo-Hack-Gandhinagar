@@ -29,7 +29,7 @@ export function ThemeProvider({ children }: PropsWithChildren) {
     if (stored === "light" || stored === "dark" || stored === "system") {
       return stored;
     }
-    return "system";
+    return "light";
   });
   const [resolvedMode, setResolvedMode] = useState<"light" | "dark">(
     mode === "system" ? getSystemMode() : mode,

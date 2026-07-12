@@ -1,4 +1,4 @@
-import { Asset } from "../../stores/mock-db";
+import type { Asset } from "@/services/data/types/domain";
 import { Sheet } from "../../components/ui/sheet";
 import { Badge } from "../../components/ui/badge";
 import { Button } from "../../components/ui/button";

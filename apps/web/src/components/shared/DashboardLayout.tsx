@@ -1,7 +1,8 @@
 import React from "react";
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useAuthStore } from "../../stores/auth-store";
-import { useMockDb, type Employee } from "../../stores/mock-db";
+import { getOrgRepository } from "@/services/data/repositories";
+import type { Employee } from "@/services/data/types/domain";
 import {
   LayoutDashboard,
   Users,
@@ -52,13 +53,27 @@ const NAV_LINKS = [
 ];
 
 export function DashboardLayout() {
+  const orgRepository = getOrgRepository();
   const { user, setAuth, logout } = useAuthStore();
-  const { users } = useMockDb();
+  const [users, setUsers] = React.useState<Employee[]>([]);
   const location = useLocation();
   const navigate = useNavigate();
   const [isDark, setIsDark] = React.useState(
     document.documentElement.classList.contains("dark"),
   );
+
+  React.useEffect(() => {
+    async function loadUsers() {
+      try {
+        const data = await orgRepository.listEmployees();
+        setUsers(data);
+      } catch (error) {
+        console.error("Failed to load users for role switch", error);
+      }
+    }
+
+    loadUsers();
+  }, [orgRepository]);
 
   // This replaces the traditional login screen for testing purposes
   const handleRoleSwitch = (newUser: Employee) => {

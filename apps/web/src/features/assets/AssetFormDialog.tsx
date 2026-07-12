@@ -10,7 +10,7 @@ import {
   SelectValue,
 } from "../../components/ui/select";
 import { FileUpload } from "../../components/ui/file-upload";
-import { api } from "../../lib/api-client";
+import { getAssetsRepository } from "@/services/data/repositories";
 import { X } from "lucide-react";
 
 interface AssetFormDialogProps {
@@ -28,11 +28,13 @@ export function AssetFormDialog({
   departments,
   onSuccess,
 }: AssetFormDialogProps) {
+  const assetsRepository = getAssetsRepository();
+
   const [name, setName] = useState("");
   const [categoryId, setCategoryId] = useState("");
   const [locationDepartmentId, setLocationDepartmentId] = useState("");
   const [serialNumber, setSerialNumber] = useState("");
-  const [, setPhotoUrl] = useState<string | null>(null);
+  const [photoUrl, setPhotoUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
   if (!isOpen) return null;
@@ -40,9 +42,16 @@ export function AssetFormDialog({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+
     try {
-      // In a real app we'd POST to /assets
-      // await api.post("/assets", { ... });
+      await assetsRepository.createAsset({
+        name,
+        categoryId,
+        locationDepartmentId: locationDepartmentId || undefined,
+        serialNumber: serialNumber || undefined,
+        photoUrls: photoUrl ? [photoUrl] : undefined,
+      });
+
       onSuccess();
       onClose();
     } catch (err) {
@@ -53,12 +62,7 @@ export function AssetFormDialog({
   };
 
   const handleFileUpload = async (file: File) => {
-    const formData = new FormData();
-    formData.append("file", file);
-    const res = await api.post("/uploads", formData, {
-      headers: { "Content-Type": "multipart/form-data" },
-    });
-    return res.data.data;
+    return assetsRepository.uploadFile(file);
   };
 
   return (

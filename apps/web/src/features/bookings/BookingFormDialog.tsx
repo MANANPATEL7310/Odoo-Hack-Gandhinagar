@@ -11,12 +11,14 @@ import {
 } from "../../components/ui/select";
 import { DatePicker } from "../../components/ui/date-picker";
 import { X } from "lucide-react";
+import type { CreateBookingInput } from "@/services/data/types/domain";
 
 interface BookingFormDialogProps {
   isOpen: boolean;
   onClose: () => void;
   assets: { id: string; name: string }[];
   employees: { id: string; name: string }[];
+  onSubmit: (payload: CreateBookingInput) => Promise<void>;
 }
 
 export function BookingFormDialog({
@@ -24,6 +26,7 @@ export function BookingFormDialog({
   onClose,
   assets,
   employees,
+  onSubmit,
 }: BookingFormDialogProps) {
   const [assetId, setAssetId] = useState("");
   const [employeeId, setEmployeeId] = useState("");
@@ -49,8 +52,14 @@ export function BookingFormDialog({
 
         <form
           className="space-y-4"
-          onSubmit={(e) => {
+          onSubmit={async (e) => {
             e.preventDefault();
+            await onSubmit({
+              resourceAssetId: assetId,
+              bookedByEmployeeId: employeeId,
+              startTime,
+              endTime,
+            });
             onClose();
           }}
         >

@@ -1,6 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
-import { api } from "../../lib/api-client";
-import { useMockDb, type Asset } from "../../stores/mock-db";
+import { getAssetsRepository } from "@/services/data/repositories";
+import type {
+  Asset,
+  AssetCategory,
+  Department,
+} from "@/services/data/types/domain";
 import {
   Table,
   TableBody,
@@ -35,7 +39,11 @@ import { AssetDetailDrawer } from "./AssetDetailDrawer";
 import { AssetFormDialog } from "./AssetFormDialog";
 
 export function AssetRegistryPage() {
+  const assetsRepository = getAssetsRepository();
+
   const [assets, setAssets] = useState<Asset[]>([]);
+  const [assetCategories, setAssetCategories] = useState<AssetCategory[]>([]);
+  const [departments, setDepartments] = useState<Department[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("All");
@@ -44,24 +52,39 @@ export function AssetRegistryPage() {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [isFormOpen, setIsFormOpen] = useState(false);
 
-  const assetCategories = useMockDb((state) => state.assetCategories);
-  const departments = useMockDb((state) => state.departments);
-
   const fetchAssets = async () => {
-    setLoading(true);
     try {
-      const res = await api.get("/assets");
-      setAssets(res.data.data);
+      const data = await assetsRepository.listAssets();
+      setAssets(data);
     } catch (error) {
       console.error("Failed to load assets", error);
-    } finally {
-      setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchAssets();
-  }, []);
+    async function bootstrap() {
+      setLoading(true);
+      try {
+        const [assetsData, categoriesData, departmentsData] = await Promise.all(
+          [
+            assetsRepository.listAssets(),
+            assetsRepository.listAssetCategories(),
+            assetsRepository.listDepartments(),
+          ],
+        );
+
+        setAssets(assetsData);
+        setAssetCategories(categoriesData);
+        setDepartments(departmentsData);
+      } catch (error) {
+        console.error("Failed to bootstrap asset registry", error);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    bootstrap();
+  }, [assetsRepository]);
 
   const categoryById = useMemo(
     () =>

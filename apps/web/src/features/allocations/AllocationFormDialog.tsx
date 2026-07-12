@@ -10,12 +10,14 @@ import {
 } from "../../components/ui/select";
 import { DatePicker } from "../../components/ui/date-picker";
 import { X } from "lucide-react";
+import type { CreateAllocationInput } from "@/services/data/types/domain";
 
 interface AllocationFormDialogProps {
   isOpen: boolean;
   onClose: () => void;
   assets: { id: string; name: string }[];
   employees: { id: string; name: string }[];
+  onSubmit: (payload: CreateAllocationInput) => Promise<void>;
 }
 
 export function AllocationFormDialog({
@@ -23,6 +25,7 @@ export function AllocationFormDialog({
   onClose,
   assets,
   employees,
+  onSubmit,
 }: AllocationFormDialogProps) {
   const [assetId, setAssetId] = useState("");
   const [employeeId, setEmployeeId] = useState("");
@@ -46,8 +49,13 @@ export function AllocationFormDialog({
 
         <form
           className="space-y-4"
-          onSubmit={(e) => {
+          onSubmit={async (e) => {
             e.preventDefault();
+            await onSubmit({
+              assetId,
+              holderEmployeeId: employeeId,
+              expectedReturnDate: returnDate || undefined,
+            });
             onClose();
           }}
         >

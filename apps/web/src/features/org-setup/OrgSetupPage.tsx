@@ -1,4 +1,10 @@
-import { useMockDb } from "../../stores/mock-db";
+import { useEffect, useState } from "react";
+import { getOrgRepository } from "@/services/data/repositories";
+import type {
+  AssetCategory,
+  Department,
+  Employee,
+} from "@/services/data/types/domain";
 import { Tabs } from "../../components/ui/tabs";
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
@@ -13,7 +19,31 @@ import {
 import { Building, Network, Users } from "lucide-react";
 
 export function OrgSetupPage() {
-  const { departments, assetCategories, users } = useMockDb();
+  const orgRepository = getOrgRepository();
+  const [departments, setDepartments] = useState<Department[]>([]);
+  const [assetCategories, setAssetCategories] = useState<AssetCategory[]>([]);
+  const [users, setUsers] = useState<Employee[]>([]);
+
+  useEffect(() => {
+    async function bootstrap() {
+      try {
+        const [departmentsData, categoriesData, employeesData] =
+          await Promise.all([
+            orgRepository.listDepartments(),
+            orgRepository.listAssetCategories(),
+            orgRepository.listEmployees(),
+          ]);
+
+        setDepartments(departmentsData);
+        setAssetCategories(categoriesData);
+        setUsers(employeesData);
+      } catch (error) {
+        console.error("Failed to load org setup data", error);
+      }
+    }
+
+    bootstrap();
+  }, [orgRepository]);
 
   return (
     <div className="space-y-6 p-2 lg:p-0">

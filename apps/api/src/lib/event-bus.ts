@@ -85,18 +85,21 @@ export type DomainEvents = {
     assetId: string;
     assetTag: string;
     raisedById: string;
+    actorId: string;
   };
   "maintenancerequest.rejected": {
     requestId: string;
     assetTag: string;
     raisedById: string;
     reason: string;
+    actorId: string;
   };
   "maintenancerequest.resolved": {
     requestId: string;
     assetId: string;
     assetTag: string;
     raisedById: string;
+    actorId: string;
     currentHolderId?: string;
   };
   "maintenancerequest.created": {

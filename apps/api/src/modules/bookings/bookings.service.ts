@@ -120,13 +120,18 @@ export async function createBooking(
     return created;
   });
 
-  // Publish domain event outside transaction
   eventBus.publish("booking.created", {
     bookingId: booking.id,
     resourceName: asset.name,
     bookedById: currentUser.id,
     startTime: booking.startTime,
     endTime: booking.endTime,
+  });
+
+  eventBus.publish("booking:created", {
+    bookingId: booking.id,
+    assetId: asset.id,
+    actorId: currentUser.id,
   });
 
   return db.booking.findUnique({
@@ -211,6 +216,12 @@ export async function cancelBooking(
     bookedById: booking.bookedByEmployeeId,
   });
 
+  eventBus.publish("booking:cancelled", {
+    bookingId: booking.id,
+    assetId: booking.resourceAssetId,
+    actorId: currentUser.id,
+  });
+
   return db.booking.findUnique({
     where: { id: updated.id },
     include: {
@@ -293,11 +304,16 @@ export async function rescheduleBooking(
     return { created };
   });
 
-  // Publish events outside transaction
   eventBus.publish("booking.cancelled", {
     bookingId: booking.id,
     resourceName: booking.resourceAsset.name,
     bookedById: booking.bookedByEmployeeId,
+  });
+
+  eventBus.publish("booking:cancelled", {
+    bookingId: booking.id,
+    assetId: booking.resourceAssetId,
+    actorId: currentUser.id,
   });
 
   eventBus.publish("booking.created", {
@@ -306,6 +322,12 @@ export async function rescheduleBooking(
     bookedById: booking.bookedByEmployeeId,
     startTime: result.created.startTime,
     endTime: result.created.endTime,
+  });
+
+  eventBus.publish("booking:created", {
+    bookingId: result.created.id,
+    assetId: booking.resourceAssetId,
+    actorId: currentUser.id,
   });
 
   return db.booking.findUnique({

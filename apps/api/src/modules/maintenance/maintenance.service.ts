@@ -200,6 +200,7 @@ export async function approveMaintenanceRequest(
     assetId: request.assetId,
     assetTag: request.asset.assetTag,
     raisedById: updated.raisedByEmployeeId,
+    actorId: currentUser.id,
   });
 
   return db.maintenanceRequest.findUnique({
@@ -250,6 +251,7 @@ export async function rejectMaintenanceRequest(
     assetTag: request.asset.assetTag,
     raisedById: updated.raisedByEmployeeId,
     reason: input.rejectionReason,
+    actorId: currentUser.id,
   });
 
   return db.maintenanceRequest.findUnique({
@@ -414,6 +416,7 @@ export async function resolveMaintenance(
     assetId: request.assetId,
     assetTag: request.asset.assetTag,
     raisedById: updated.raisedByEmployeeId,
+    actorId: _currentUser.id,
     currentHolderId: activeAllocation?.holderEmployeeId || undefined,
   });
 

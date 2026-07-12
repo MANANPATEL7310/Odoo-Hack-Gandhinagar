@@ -208,6 +208,12 @@ export async function createAllocation(
     assetTag: asset.assetTag,
   });
 
+  eventBus.publish("allocation:created", {
+    allocationId: allocation.id,
+    assetId: asset.id,
+    actorId: currentUser.id,
+  });
+
   // Return full allocation object
   return db.allocation.findUnique({
     where: { id: allocation.id },
@@ -287,6 +293,12 @@ export async function returnAllocation(
     });
 
     return res;
+  });
+
+  eventBus.publish("allocation:returned", {
+    allocationId: updated.id,
+    assetId: allocation.assetId,
+    actorId: currentUser.id,
   });
 
   return db.allocation.findUnique({

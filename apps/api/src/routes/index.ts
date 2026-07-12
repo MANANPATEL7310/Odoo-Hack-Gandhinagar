@@ -16,6 +16,8 @@ import {
   auditsRouter,
   auditItemsRouter,
 } from "../modules/audits/audits.routes.js";
+import { activityLogsRouter } from "../modules/activity-logs/activity-logs.routes.js";
+import { reportsRouter } from "../modules/reports/reports.routes.js";
 
 export const apiRouter = Router();
 
@@ -34,3 +36,5 @@ apiRouter.use("/bookings", bookingsRouter);
 apiRouter.use("/maintenance-requests", maintenanceRouter);
 apiRouter.use("/audit-cycles", auditsRouter);
 apiRouter.use("/audit-cycle-items", auditItemsRouter);
+apiRouter.use("/activity-logs", activityLogsRouter);
+apiRouter.use("/reports", reportsRouter);

@@ -202,6 +202,12 @@ export async function createTransferRequest(
     targetDepartmentId: request.targetDepartmentId || undefined,
   });
 
+  eventBus.publish("transfer:requested", {
+    requestId: request.id,
+    assetId: asset.id,
+    requesterId: currentUser.id,
+  });
+
   return db.transferRequest.findUnique({
     where: { id: request.id },
     include: {
@@ -325,6 +331,13 @@ export async function approveTransferRequest(
     targetEmployeeId: approved.targetEmployeeId || undefined,
   });
 
+  eventBus.publish("transfer:decided", {
+    requestId: approved.id,
+    assetId: request.assetId,
+    status: "APPROVED",
+    actorId: currentUser.id,
+  });
+
   return db.transferRequest.findUnique({
     where: { id: approved.id },
     include: {
@@ -403,6 +416,13 @@ export async function rejectTransferRequest(
     assetTag: request.asset.assetTag,
     requestedById: rejected.requestedByEmployeeId,
     reason: input.reason,
+  });
+
+  eventBus.publish("transfer:decided", {
+    requestId: rejected.id,
+    assetId: request.assetId,
+    status: "REJECTED",
+    actorId: currentUser.id,
   });
 
   return db.transferRequest.findUnique({

@@ -26,6 +26,10 @@ export function BookingsPage() {
         onClose={() => setIsFormOpen(false)}
         assets={bookableAssets}
         employees={users}
+        onSubmit={async (payload) => {
+          console.log("Submit booking", payload);
+          // In real implementation, call repository
+        }}
       />
 
       <div className="flex items-end justify-between">

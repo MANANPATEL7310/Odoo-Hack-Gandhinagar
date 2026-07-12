@@ -32,21 +32,21 @@ import {
 } from "../ui/dropdown-menu";
 
 const NAV_LINKS = [
-  { name: "Dashboard", path: "/dashboard", icon: LayoutDashboard },
-  { name: "Org Setup", path: "/org-setup", icon: Users, roles: ["ADMIN"] },
-  { name: "Assets", path: "/assets", icon: Box },
-  { name: "Allocations", path: "/allocations", icon: ArrowRightLeft },
-  { name: "Bookings", path: "/bookings", icon: Calendar },
-  { name: "Maintenance", path: "/maintenance", icon: Wrench },
+  { name: "Dashboard", path: "/app/dashboard", icon: LayoutDashboard },
+  { name: "Org Setup", path: "/app/org-setup", icon: Users, roles: ["ADMIN"] },
+  { name: "Assets", path: "/app/assets", icon: Box },
+  { name: "Allocations", path: "/app/allocations", icon: ArrowRightLeft },
+  { name: "Bookings", path: "/app/bookings", icon: Calendar },
+  { name: "Maintenance", path: "/app/maintenance", icon: Wrench },
   {
     name: "Audits",
-    path: "/audits",
+    path: "/app/audits",
     icon: ShieldCheck,
     roles: ["ADMIN", "ASSET_MANAGER"],
   },
   {
     name: "Reports",
-    path: "/reports",
+    path: "/app/reports",
     icon: FileBarChart,
     roles: ["ADMIN", "ASSET_MANAGER", "DEPARTMENT_HEAD"],
   },

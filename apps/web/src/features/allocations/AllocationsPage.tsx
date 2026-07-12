@@ -28,6 +28,11 @@ export function AllocationsPage() {
         onClose={() => setIsFormOpen(false)}
         assets={availableAssets}
         employees={users}
+        onSubmit={async (payload) => {
+          console.log("Submit allocation", payload);
+          // In real implementation, call repository:
+          // await getAllocationsRepository().createAllocation(payload);
+        }}
       />
 
       <div className="flex items-end justify-between">

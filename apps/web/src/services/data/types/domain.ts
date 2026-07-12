@@ -18,6 +18,14 @@ export type TransferStatus =
   | "REJECTED"
   | "CANCELLED";
 export type BookingStatus = "UPCOMING" | "ONGOING" | "COMPLETED" | "CANCELLED";
+export type MaintenancePriority = "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
+export type MaintenanceStatus =
+  | "PENDING"
+  | "APPROVED"
+  | "REJECTED"
+  | "TECHNICIAN_ASSIGNED"
+  | "IN_PROGRESS"
+  | "RESOLVED";
 
 export interface Employee {
   id: string;
@@ -42,7 +50,7 @@ export interface AssetCategory {
   id: string;
   name: string;
   description?: string;
-  fieldSchema?: unknown;
+  fieldSchema?: Record<string, unknown>;
   status: CategoryStatus;
 }
 
@@ -61,7 +69,7 @@ export interface Asset {
   isBookable: boolean;
   photoUrls: string[];
   documentUrls: string[];
-  categoryMetadata?: unknown;
+  categoryMetadata?: Record<string, unknown>;
 }
 
 export interface Allocation {
@@ -94,6 +102,17 @@ export interface Booking {
   startTime: string;
   endTime: string;
   status: BookingStatus;
+}
+
+export interface MaintenanceRequest {
+  id: string;
+  assetId: string;
+  raisedByEmployeeId: string;
+  issueDescription: string;
+  priority: MaintenancePriority;
+  photoUrl?: string;
+  status: MaintenanceStatus;
+  technicianEmployeeId?: string;
 }
 
 export interface CreateAssetInput {

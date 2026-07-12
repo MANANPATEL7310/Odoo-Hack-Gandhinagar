@@ -15,8 +15,13 @@ import { BookingsPage } from "../features/bookings/BookingsPage";
 import { MaintenancePage } from "../features/maintenance/MaintenancePage";
 import { AuditsPage } from "../features/audits/AuditsPage";
 import { ReportsPage } from "../features/reports/ReportsPage";
+import { HomePage } from "../features/marketing/pages/home-page";
 
 const router = createBrowserRouter([
+  {
+    path: "/",
+    element: <HomePage />,
+  },
   {
     path: "/login",
     element: <LoginPage />,
@@ -26,16 +31,16 @@ const router = createBrowserRouter([
     element: <SignupPage />,
   },
   {
-    path: "/",
+    path: "/app",
     element: <ProtectedRoute />,
     children: [
       {
-        path: "/",
+        path: "",
         element: <DashboardLayout />,
         children: [
           {
             index: true,
-            element: <Navigate to="/dashboard" replace />,
+            element: <Navigate to="/app/dashboard" replace />,
           },
           {
             path: "dashboard",

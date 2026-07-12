@@ -26,12 +26,17 @@ apiClient.interceptors.response.use(
       useAuthStore.getState().clearSession();
     }
 
+    const errorPayload = error.response?.data?.error;
+
     const normalizedError: ApiError = {
       message:
+        errorPayload?.message ??
         error.response?.data?.message ??
         error.message ??
         "Something went wrong while talking to the API.",
       statusCode: error.response?.status,
+      code: errorPayload?.code,
+      details: errorPayload?.details,
     };
 
     return Promise.reject(normalizedError);

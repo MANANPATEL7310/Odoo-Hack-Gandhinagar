@@ -3,6 +3,7 @@ import { ZodError } from "zod";
 import { logger } from "../config/logger.js";
 import { httpStatus } from "../constants/http.js";
 import { DomainError } from "../lib/errors.js";
+import { sendError } from "../lib/response.js";
 
 export function errorHandler(
   error: unknown,
@@ -11,24 +12,35 @@ export function errorHandler(
   _next: NextFunction,
 ) {
   if (error instanceof ZodError) {
-    return res.status(httpStatus.badRequest).json({
-      success: false,
-      message: "Validation error.",
-      issues: error.flatten(),
-    });
+    const details = error.issues.map((err) => ({
+      field: err.path.join("."),
+      message: err.message,
+    }));
+    return sendError(
+      res,
+      httpStatus.badRequest,
+      "Validation error.",
+      "VALIDATION_ERROR",
+      details,
+    );
   }
 
   if (error instanceof DomainError) {
-    return res.status(error.statusCode).json({
-      success: false,
-      message: error.message,
-    });
+    return sendError(
+      res,
+      error.statusCode,
+      error.message,
+      error.code,
+      error.details,
+    );
   }
 
   logger.error({ error, method: req.method, url: req.originalUrl });
 
-  return res.status(httpStatus.internalServerError).json({
-    success: false,
-    message: "Internal server error.",
-  });
+  return sendError(
+    res,
+    httpStatus.internalServerError,
+    "Internal server error.",
+    "INTERNAL_ERROR",
+  );
 }

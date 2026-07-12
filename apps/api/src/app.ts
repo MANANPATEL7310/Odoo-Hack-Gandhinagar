@@ -1,6 +1,7 @@
 import cors from "cors";
 import express from "express";
 import helmet from "helmet";
+import path from "path";
 import { env } from "./config/env.js";
 import { logger } from "./config/logger.js";
 import { errorHandler } from "./middleware/error-handler.js";
@@ -19,6 +20,11 @@ export function createApp() {
   app.use(helmet());
   app.use(express.json());
 
+  // Serve local uploads statically
+  const currentDir = path.dirname(new URL(import.meta.url).pathname);
+  const uploadsDir = path.resolve(currentDir, "../public/uploads");
+  app.use("/uploads", express.static(uploadsDir));
+
   app.use((req, _res, next) => {
     logger.info(
       { method: req.method, url: req.originalUrl },
@@ -30,6 +36,7 @@ export function createApp() {
   app.use("/api/v1", apiRouter);
   app.use(notFoundHandler);
   app.use(errorHandler);
+
 
   return app;
 }

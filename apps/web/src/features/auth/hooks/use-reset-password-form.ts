@@ -1,5 +1,4 @@
-import { zodResolver } from "@hookform/resolvers/zod";
-import { appRoutes, resetPasswordInputSchema, type ResetPasswordInput } from "@template/shared";
+import { appRoutes } from "@template/shared";
 import { useMutation } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { useSearchParams, useNavigate } from "react-router-dom";
@@ -23,8 +22,9 @@ export function useResetPasswordForm() {
       toast.success(data.message || "Password updated successfully! You can now log in.");
       navigate(appRoutes.login);
     },
-    onError: (error: any) => {
-      const errMsg = error.response?.data?.message || error.message || "Failed to reset password.";
+    onError: (error: unknown) => {
+      const err = error as { response?: { data?: { message?: string } }; message?: string };
+      const errMsg = err.response?.data?.message || err.message || "Failed to reset password.";
       toast.error(errMsg);
     },
   });

@@ -6,6 +6,7 @@ import {
   type SignupInput,
   type ForgotPasswordInput,
   type ResetPasswordInput,
+  type AuthUser,
 } from "@template/shared";
 import { apiClient } from "@/services/http/api-client";
 
@@ -29,7 +30,7 @@ export async function resetPassword(payload: ResetPasswordInput): Promise<{ mess
   return data;
 }
 
-export async function getMe(): Promise<{ user: any }> {
+export async function getMe(): Promise<{ user: AuthUser }> {
   const { data } = await apiClient.get(apiRoutes.auth.me.path);
   return data.data;
 }

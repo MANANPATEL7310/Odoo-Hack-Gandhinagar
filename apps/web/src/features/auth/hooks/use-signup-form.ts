@@ -27,8 +27,9 @@ export function useSignupForm() {
       toast.success("Account created successfully! Welcome to your workspace.");
       navigate(appRoutes.dashboard);
     },
-    onError: (error: any) => {
-      const errMsg = error.response?.data?.message || error.message || "Failed to sign up.";
+    onError: (error: unknown) => {
+      const err = error as { response?: { data?: { message?: string } }; message?: string };
+      const errMsg = err.response?.data?.message || err.message || "Failed to sign up.";
       toast.error(errMsg);
     },
   });

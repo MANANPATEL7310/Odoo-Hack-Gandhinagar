@@ -19,8 +19,9 @@ export function useForgotPasswordForm() {
       toast.success(data.message || "Request submitted successfully.");
       form.reset();
     },
-    onError: (error: any) => {
-      const errMsg = error.response?.data?.message || error.message || "Failed to submit request.";
+    onError: (error: unknown) => {
+      const err = error as { response?: { data?: { message?: string } }; message?: string };
+      const errMsg = err.response?.data?.message || err.message || "Failed to submit request.";
       toast.error(errMsg);
     },
   });

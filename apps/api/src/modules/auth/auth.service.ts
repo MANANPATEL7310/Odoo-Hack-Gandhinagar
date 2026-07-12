@@ -4,6 +4,7 @@ import { db } from "../../lib/db.js";
 import { env } from "../../config/env.js";
 import { hashPassword, comparePassword } from "../../lib/hash.js";
 import type { SignupInput, LoginInput, ForgotPasswordInput, ResetPasswordInput } from "@template/shared";
+import type { Employee, Role } from "@prisma/client";
 
 // Custom API Errors
 export class AuthError extends Error {
@@ -49,7 +50,7 @@ export class AuthService {
         email: payload.email,
         name: payload.name,
         passwordHash,
-        role: "EMPLOYEE", // Forced server-side
+        role: "EMPLOYEE" as Role, // Forced server-side
         status: "ACTIVE",  // Default to Active
       },
     });
@@ -178,7 +179,7 @@ export class AuthService {
     };
   }
 
-  private generateToken(employee: { id: string; email: string; name: string; role: string; departmentId: string | null }) {
+  private generateToken(employee: Employee) {
     return jwt.sign(
       {
         sub: employee.id,

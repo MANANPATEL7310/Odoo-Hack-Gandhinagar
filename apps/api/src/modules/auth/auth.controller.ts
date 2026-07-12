@@ -3,7 +3,7 @@ import { sendOk, sendError } from "../../lib/response.js";
 import { authService, AuthError } from "./auth.service.js";
 import type { SignupInput, LoginInput, ForgotPasswordInput, ResetPasswordInput } from "@template/shared";
 
-async function handleAuthAction(res: Response, action: () => Promise<any>) {
+async function handleAuthAction(res: Response, action: () => Promise<unknown>) {
   try {
     const result = await action();
     return sendOk(res, result);

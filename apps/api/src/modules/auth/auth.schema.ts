@@ -1,5 +1,5 @@
-import { loginInputSchema } from "@template/shared";
-import type { LoginInput } from "@template/shared";
+import { loginInputSchema, signupInputSchema } from "@template/shared";
+import type { LoginInput, SignupInput } from "@template/shared";
 
-export { loginInputSchema };
-export type { LoginInput };
+export { loginInputSchema, signupInputSchema };
+export type { LoginInput, SignupInput };

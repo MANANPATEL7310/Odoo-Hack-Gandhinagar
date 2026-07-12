@@ -1,32 +1,207 @@
 import jwt from "jsonwebtoken";
+import crypto from "crypto";
+import { db } from "../../lib/db.js";
 import { env } from "../../config/env.js";
-import type { LoginInput } from "./auth.schema.js";
+import { hashPassword, comparePassword } from "../../lib/hash.js";
+import type {
+  SignupInput,
+  LoginInput,
+  ForgotPasswordInput,
+  ResetPasswordInput,
+} from "@template/shared";
+import type { Employee, Role } from "@prisma/client";
+import {
+  ConflictError,
+  UnauthorizedError,
+  ForbiddenError,
+  BadRequestError,
+} from "../../lib/errors.js";
 
-export function loginService(payload: LoginInput) {
-  const user = {
-    id: "usr-template-admin",
-    name: payload.email.includes("admin") ? "Admin Builder" : "Product Builder",
-    email: payload.email,
-    role: payload.email.includes("admin")
-      ? ("admin" as const)
-      : ("member" as const),
-  };
+// In-memory store for password reset tokens (Hackathon MVP solution)
+const resetTokens = new Map<string, { email: string; expires: Date }>();
 
-  const accessToken = jwt.sign(
-    {
-      sub: user.id,
-      email: user.email,
-      name: user.name,
-      role: user.role,
-    },
-    env.JWT_SECRET,
-    {
-      expiresIn: env.JWT_EXPIRES_IN as unknown as number,
-    },
-  );
+export class AuthService {
+  async signup(payload: SignupInput) {
+    // 1. Check if employee already exists
+    const existingEmployee = await db.employee.findUnique({
+      where: { email: payload.email },
+    });
 
-  return {
-    accessToken,
-    user,
-  };
+    if (existingEmployee) {
+      if (existingEmployee.status === "INACTIVE") {
+        throw new ForbiddenError(
+          "Account is inactive. Please contact your administrator.",
+        );
+      }
+      throw new ConflictError("Email address is already in use.");
+    }
+
+    // 2. Hash password and save Employee record
+    const passwordHash = await hashPassword(payload.password);
+    const employee = await db.employee.create({
+      data: {
+        email: payload.email,
+        name: payload.name,
+        passwordHash,
+        role: "EMPLOYEE" as Role, // Forced server-side
+        status: "ACTIVE", // Default to Active
+      },
+    });
+
+    // 3. Issue JWT Token
+    const accessToken = this.generateToken(employee);
+
+    return {
+      accessToken,
+      user: {
+        id: employee.id,
+        name: employee.name,
+        email: employee.email,
+        role: employee.role,
+        status: employee.status,
+        departmentId: employee.departmentId,
+      },
+    };
+  }
+
+  async login(payload: LoginInput) {
+    // 1. Fetch Employee
+    const employee = await db.employee.findUnique({
+      where: { email: payload.email },
+    });
+
+    if (!employee) {
+      throw new UnauthorizedError("Invalid email or password.");
+    }
+
+    // 2. Verify Hash
+    const isPasswordMatch = await comparePassword(
+      payload.password,
+      employee.passwordHash,
+    );
+    if (!isPasswordMatch) {
+      throw new UnauthorizedError("Invalid email or password.");
+    }
+
+    // 3. Check Status
+    if (employee.status === "INACTIVE") {
+      throw new ForbiddenError("Account is inactive. Please contact admin.");
+    }
+
+    // 4. Issue Token
+    const accessToken = this.generateToken(employee);
+
+    return {
+      accessToken,
+      user: {
+        id: employee.id,
+        name: employee.name,
+        email: employee.email,
+        role: employee.role,
+        status: employee.status,
+        departmentId: employee.departmentId,
+      },
+    };
+  }
+
+  async forgotPassword(payload: ForgotPasswordInput) {
+    const employee = await db.employee.findUnique({
+      where: { email: payload.email },
+    });
+
+    // Always return 200 generic message even if email doesn't exist to prevent user enumeration
+    if (employee && employee.status === "ACTIVE") {
+      const resetToken = crypto.randomBytes(32).toString("hex");
+      const expires = new Date(Date.now() + 15 * 60 * 1000); // 15 mins expiry
+
+      resetTokens.set(resetToken, { email: payload.email, expires });
+
+      // In development, log the reset token for manual testing verification
+      console.log(
+        `[DEV ONLY] Password reset token generated for ${payload.email}: ${resetToken}`,
+      );
+    }
+
+    return {
+      message:
+        "If the email is registered, you will receive instructions to reset your password.",
+    };
+  }
+
+  async resetPassword(payload: ResetPasswordInput) {
+    const record = resetTokens.get(payload.token);
+
+    if (!record || record.expires.getTime() < Date.now()) {
+      throw new BadRequestError("Reset token is invalid or has expired.");
+    }
+
+    const employee = await db.employee.findUnique({
+      where: { email: record.email },
+    });
+
+    if (!employee || employee.status !== "ACTIVE") {
+      throw new BadRequestError("Reset token is invalid or has expired.");
+    }
+
+    const newPasswordHash = await hashPassword(payload.newPassword);
+    await db.employee.update({
+      where: { id: employee.id },
+      data: { passwordHash: newPasswordHash },
+    });
+
+    // Invalidate the consumed token
+    resetTokens.delete(payload.token);
+
+    return {
+      message: "Password reset completed successfully.",
+    };
+  }
+
+  async getMe(userId: string) {
+    const employee = await db.employee.findUnique({
+      where: { id: userId },
+    });
+
+    if (!employee || employee.status === "INACTIVE") {
+      throw new UnauthorizedError("User is unauthenticated or deactivated.");
+    }
+
+    return {
+      user: {
+        id: employee.id,
+        name: employee.name,
+        email: employee.email,
+        role: employee.role,
+        status: employee.status,
+        departmentId: employee.departmentId,
+      },
+    };
+  }
+
+  private generateToken(employee: Employee) {
+    return jwt.sign(
+      {
+        sub: employee.id,
+        email: employee.email,
+        name: employee.name,
+        role: employee.role,
+        departmentId: employee.departmentId,
+      },
+      env.JWT_SECRET,
+      {
+        expiresIn: env.JWT_EXPIRES_IN as unknown as number,
+      },
+    );
+  }
+}
+
+export const authService = new AuthService();
+
+// Backwards-compatibility aliases
+export async function loginService(payload: LoginInput) {
+  return authService.login(payload);
+}
+
+export async function signupService(payload: SignupInput) {
+  return authService.signup(payload);
 }

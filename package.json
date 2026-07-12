@@ -17,6 +17,7 @@
     "gen:module": "bash scripts/gen-module.sh",
     "gen:feature": "bash scripts/gen-feature.sh",
     "db:push": "pnpm --filter @template/api exec prisma db push",
+    "db:seed": "pnpm --filter @template/api exec prisma db seed",
     "db:studio": "pnpm --filter @template/api exec prisma studio",
     "db:migrate": "pnpm --filter @template/api exec prisma migrate dev",
     "db:generate": "pnpm --filter @template/api exec prisma generate"

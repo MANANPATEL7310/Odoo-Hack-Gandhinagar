@@ -10,6 +10,7 @@ import { assetsRouter } from "../modules/assets/assets.routes.js";
 import { notificationRouter } from "../modules/notification/notification.routes.js";
 import { allocationsRouter } from "../modules/allocations/allocations.routes.js";
 import { transferRequestsRouter } from "../modules/allocations/transfer-requests.routes.js";
+import { bookingsRouter } from "../modules/bookings/bookings.routes.js";
 
 export const apiRouter = Router();
 
@@ -24,3 +25,4 @@ apiRouter.use("/assets", assetsRouter);
 apiRouter.use("/notifications", notificationRouter);
 apiRouter.use("/allocations", allocationsRouter);
 apiRouter.use("/transfer-requests", transferRequestsRouter);
+apiRouter.use("/bookings", bookingsRouter);

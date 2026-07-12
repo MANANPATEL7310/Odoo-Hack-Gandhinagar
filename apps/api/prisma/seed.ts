@@ -1,6 +1,8 @@
-import process from "process";
-import { PrismaClient, Role, EmployeeStatus } from "@prisma/client";
-import { hashPassword } from "../src/lib/crypto.js";
+import { PrismaClient } from "@prisma/client";
+import { hashPassword } from "../src/lib/hash.js";
+import { config } from "dotenv";
+
+config();
 
 const prisma = new PrismaClient();
 
@@ -23,38 +25,42 @@ async function main() {
     SELECT setval('asset_tag_seq', COALESCE((SELECT MAX(CAST(SUBSTRING("assetTag" FROM 4) AS INTEGER)) FROM "Asset"), 0) + 1, false);
   `);
 
-  const email = process.env.ADMIN_EMAIL || "admin@assetflow.com";
-  const password = process.env.ADMIN_PASSWORD || "adminpassword123";
+  const email =
+    process.env.INITIAL_ADMIN_EMAIL ||
+    process.env.ADMIN_EMAIL ||
+    "admin@example.com";
+  const password =
+    process.env.INITIAL_ADMIN_PASSWORD ||
+    process.env.ADMIN_PASSWORD ||
+    "changeme123";
 
-  console.log(`Bootstrapping admin account checking: ${email}`);
+  console.log(`Seeding bootstrap admin user: ${email}...`);
 
-  const existingAdmin = await prisma.employee.findUnique({
+  const passwordHash = await hashPassword(password);
+
+  await prisma.employee.upsert({
     where: { email },
-  });
-
-  if (existingAdmin) {
-    console.log(`Admin account with email ${email} already exists.`);
-    return;
-  }
-
-  const passwordHash = hashPassword(password);
-
-  await prisma.employee.create({
-    data: {
+    update: {
       name: "System Admin",
-      email,
       passwordHash,
-      role: Role.ADMIN,
-      status: EmployeeStatus.ACTIVE,
+      role: "ADMIN",
+      status: "ACTIVE",
+    },
+    create: {
+      email,
+      name: "System Admin",
+      passwordHash,
+      role: "ADMIN",
+      status: "ACTIVE",
     },
   });
 
-  console.log(`Successfully bootstrapped initial admin account: ${email}`);
+  console.log("Database seeded successfully.");
 }
 
 main()
   .catch((e) => {
-    console.error("Error during admin bootstrapping seed:", e);
+    console.error("Error seeding database:", e);
     process.exit(1);
   })
   .finally(async () => {

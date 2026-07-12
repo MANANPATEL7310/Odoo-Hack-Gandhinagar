@@ -2,6 +2,7 @@ import { EventEmitter } from "events";
 import { logger } from "../config/logger.js";
 
 export type DomainEvents = {
+  // Other Developer's Events
   "allocation:created": {
     allocationId: string;
     assetId: string;
@@ -39,10 +40,77 @@ export type DomainEvents = {
   "audit:created": { cycleId: string; actorId: string };
   "audit:closed": { cycleId: string; actorId: string };
   "audit:item_marked": { itemId: string; status: string; actorId: string };
+
+  // Our Notification Hooks & Events
+  "asset.allocated": {
+    assetId: string;
+    holderEmployeeId?: string;
+    assetTag: string;
+  };
+  "transferrequest.created": {
+    requestId: string;
+    assetId: string;
+    assetTag: string;
+    requestedById: string;
+    requestedByName: string;
+    targetDepartmentId?: string;
+  };
+  "transferrequest.approved": {
+    requestId: string;
+    assetId: string;
+    assetTag: string;
+    requestedById: string;
+    targetEmployeeId?: string;
+  };
+  "transferrequest.rejected": {
+    requestId: string;
+    assetTag: string;
+    requestedById: string;
+    reason: string;
+  };
+  "booking.created": {
+    bookingId: string;
+    resourceName: string;
+    bookedById: string;
+    startTime: Date | string;
+    endTime: Date | string;
+  };
+  "booking.cancelled": {
+    bookingId: string;
+    resourceName: string;
+    bookedById: string;
+  };
+  "maintenancerequest.approved": {
+    requestId: string;
+    assetId: string;
+    assetTag: string;
+    raisedById: string;
+  };
+  "maintenancerequest.rejected": {
+    requestId: string;
+    assetTag: string;
+    raisedById: string;
+    reason: string;
+  };
+  "maintenancerequest.resolved": {
+    requestId: string;
+    assetId: string;
+    assetTag: string;
+    raisedById: string;
+    currentHolderId?: string;
+  };
+  "employee.role_changed": {
+    employeeId: string;
+    newRole: string;
+  };
 };
 
 class EventBus {
   private emitter = new EventEmitter();
+
+  constructor() {
+    this.emitter.setMaxListeners(30);
+  }
 
   publish<K extends keyof DomainEvents>(
     event: K,

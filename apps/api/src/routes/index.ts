@@ -7,6 +7,7 @@ import { departmentsRouter } from "../modules/departments/departments.routes.js"
 import { assetCategoriesRouter } from "../modules/asset-categories/asset-categories.routes.js";
 import { employeesRouter } from "../modules/employees/employees.routes.js";
 import { assetsRouter } from "../modules/assets/assets.routes.js";
+import { notificationRouter } from "../modules/notification/notification.routes.js";
 
 export const apiRouter = Router();
 
@@ -18,3 +19,4 @@ apiRouter.use("/departments", departmentsRouter);
 apiRouter.use("/asset-categories", assetCategoriesRouter);
 apiRouter.use("/employees", employeesRouter);
 apiRouter.use("/assets", assetsRouter);
+apiRouter.use("/notifications", notificationRouter);

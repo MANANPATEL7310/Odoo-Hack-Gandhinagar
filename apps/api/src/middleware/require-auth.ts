@@ -9,6 +9,7 @@ type JwtPayload = {
   email: string;
   name: string;
   role: Role;
+  departmentId: string | null;
 };
 
 export function requireAuth(req: Request, res: Response, next: NextFunction) {

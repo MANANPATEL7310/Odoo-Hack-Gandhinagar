@@ -1,7 +1,11 @@
 import { createApp } from "./app.js";
 import { env } from "./config/env.js";
 import { logger } from "./config/logger.js";
+import { initSubscribers } from "./subscribers/index.js";
 import { scheduler } from "./lib/scheduler.js";
+
+// Initialize all event subscribers
+initSubscribers();
 
 // Register background jobs (stubs to be filled by respective feature modules)
 scheduler.register("booking-status-transitions", 60 * 1000, async () => {

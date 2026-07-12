@@ -12,13 +12,13 @@
   --border: #c9d8e1;
   --ring: #0ea5e9;
 
-  --primary-light: #38bdf8;
-  --primary: #0f8fd6;
-  --primary-dark: #075985;
+  --primary-light: #818cf8;
+  --primary: #4f46e5;
+  --primary-dark: #3730a3;
 
-  --secondary-light: #6ee7b7;
-  --secondary: #0f9f87;
-  --secondary-dark: #0f766e;
+  --secondary-light: #c084fc;
+  --secondary: #9333ea;
+  --secondary-dark: #6b21a8;
 
   --success-light: #6ee7b7;
   --success: #16a34a;
@@ -46,7 +46,7 @@
   --surface-muted: #172b38;
   --muted-foreground: #a4b7c4;
   --border: #24404f;
-  --ring: #38bdf8;
+  --ring: #818cf8;
 }
 
 @theme inline {
@@ -160,23 +160,9 @@
         180deg,
         transparent 0%,
         color-mix(in srgb, var(--warning) 7%, transparent) 100%
-      ),
-      linear-gradient(
-        color-mix(in srgb, var(--foreground) 6%, transparent) 1px,
-        transparent 1px
-      ),
-      linear-gradient(
-        90deg,
-        color-mix(in srgb, var(--foreground) 5%, transparent) 1px,
-        transparent 1px
       );
     background-attachment: fixed;
-    background-size:
-      auto,
-      auto,
-      auto,
-      72px 72px,
-      72px 72px;
+    background-size: auto;
   }
 
   a {

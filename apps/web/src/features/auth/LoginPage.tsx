@@ -27,7 +27,7 @@ export function LoginPage() {
       const { user, accessToken } = response.data.data;
 
       setAuth(user, accessToken);
-      navigate("/dashboard", { replace: true });
+      navigate("/app/dashboard", { replace: true });
     } catch (err: unknown) {
       const errObj = err as { response?: { data?: { error?: string } } };
       setError(

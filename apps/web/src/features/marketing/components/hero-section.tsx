@@ -63,16 +63,6 @@ export function HeroSection() {
             filter: "blur(90px)",
           }}
         />
-        {/* Grid overlay */}
-        <div
-          className="absolute inset-0"
-          style={{
-            opacity: 0.04,
-            backgroundImage:
-              "linear-gradient(var(--foreground) 1px, transparent 1px), linear-gradient(90deg, var(--foreground) 1px, transparent 1px)",
-            backgroundSize: "40px 40px",
-          }}
-        />
       </div>
 
       <div className="mx-auto w-full max-w-6xl">
@@ -137,11 +127,14 @@ export function HeroSection() {
                 <ArrowRight className="size-4 transition-transform group-hover:translate-x-1" />
               </Button>
             </Link>
-            <button onClick={scrollToFeatures}>
-              <Button variant="outline" size="lg" className="w-44 min-w-0">
-                See How It Works
-              </Button>
-            </button>
+            <Button
+              onClick={scrollToFeatures}
+              variant="outline"
+              size="lg"
+              className="w-44 min-w-0"
+            >
+              See How It Works
+            </Button>
           </div>
         </Animate>
 

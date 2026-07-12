@@ -15,6 +15,14 @@ async function main() {
     WHERE "returnedAt" IS NULL;
   `);
 
+  console.log("Ensuring asset_tag_seq exists and is synchronized...");
+  await prisma.$executeRawUnsafe(`
+    CREATE SEQUENCE IF NOT EXISTS asset_tag_seq;
+  `);
+  await prisma.$executeRawUnsafe(`
+    SELECT setval('asset_tag_seq', COALESCE((SELECT MAX(CAST(SUBSTRING("assetTag" FROM 4) AS INTEGER)) FROM "Asset"), 0) + 1, false);
+  `);
+
   const email = process.env.ADMIN_EMAIL || "admin@assetflow.com";
   const password = process.env.ADMIN_PASSWORD || "adminpassword123";
 

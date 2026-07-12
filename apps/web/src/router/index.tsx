@@ -1,42 +1,67 @@
-import { createBrowserRouter } from "react-router-dom";
-import { appRoutes } from "@template/shared";
-import { AppLayout } from "@/components/shared/app-layout";
-import { NotFoundPage } from "@/components/shared/not-found";
-import { ProtectedRoute } from "@/features/auth/routes/protected-route";
-import { LoginPage } from "@/features/auth/pages/login-page";
-import { DashboardPage } from "@/features/dashboard/pages/dashboard-page";
-import { HomePage } from "@/features/marketing/pages/home-page";
-import { SettingsPage } from "@/features/settings/pages/settings-page";
+import {
+  createBrowserRouter,
+  Navigate,
+  RouterProvider,
+} from "react-router-dom";
+import { DashboardLayout } from "../components/shared/DashboardLayout";
+import { DashboardPage } from "../features/dashboard/DashboardPage";
+import { AssetRegistryPage } from "../features/assets/AssetRegistryPage";
 
-export const router = createBrowserRouter([
+// Temporary empty components for unbuilt routes
+const Placeholder = ({ title }: { title: string }) => (
+  <div className="flex h-full items-center justify-center text-muted-foreground">
+    <div className="text-center">
+      <h2 className="text-2xl font-bold text-foreground">{title}</h2>
+      <p className="mt-2">This feature is currently under development.</p>
+    </div>
+  </div>
+);
+
+const router = createBrowserRouter([
   {
-    path: appRoutes.home,
-    element: <HomePage />,
-  },
-  {
-    path: appRoutes.login,
-    element: <LoginPage />,
-  },
-  {
-    element: <ProtectedRoute />,
+    path: "/",
+    element: <DashboardLayout />,
     children: [
       {
-        element: <AppLayout />,
-        children: [
-          {
-            path: appRoutes.dashboard,
-            element: <DashboardPage />,
-          },
-          {
-            path: appRoutes.settings,
-            element: <SettingsPage />,
-          },
-        ],
+        index: true,
+        element: <Navigate to="/dashboard" replace />,
+      },
+      {
+        path: "dashboard",
+        element: <DashboardPage />,
+      },
+      {
+        path: "org-setup",
+        element: <Placeholder title="Org Setup" />,
+      },
+      {
+        path: "assets",
+        element: <AssetRegistryPage />,
+      },
+      {
+        path: "allocations",
+        element: <Placeholder title="Allocations" />,
+      },
+      {
+        path: "bookings",
+        element: <Placeholder title="Resource Bookings" />,
+      },
+      {
+        path: "maintenance",
+        element: <Placeholder title="Maintenance Requests" />,
+      },
+      {
+        path: "audits",
+        element: <Placeholder title="Asset Audits" />,
+      },
+      {
+        path: "reports",
+        element: <Placeholder title="Reports & Analytics" />,
       },
     ],
   },
-  {
-    path: "*",
-    element: <NotFoundPage />,
-  },
 ]);
+
+export function AppRouter() {
+  return <RouterProvider router={router} />;
+}

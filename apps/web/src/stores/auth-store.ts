@@ -1,50 +1,24 @@
-import type { AuthSession, AuthUser } from "@template/shared";
-import { storageKeys } from "@template/shared";
 import { create } from "zustand";
-import { createJSONStorage, persist } from "zustand/middleware";
+import { persist } from "zustand/middleware";
+import type { User } from "./mock-db";
 
-type AuthStore = {
-  user: AuthUser | null;
-  accessToken: string | null;
-  status: "anonymous" | "authenticated";
-  isHydrated: boolean;
-  setSession: (session: AuthSession) => void;
-  clearSession: () => void;
-  markHydrated: () => void;
-};
+interface AuthState {
+  user: User | null;
+  token: string | null;
+  setAuth: (user: User, token: string) => void;
+  logout: () => void;
+}
 
-export const useAuthStore = create<AuthStore>()(
+export const useAuthStore = create<AuthState>()(
   persist(
     (set) => ({
       user: null,
-      accessToken: null,
-      status: "anonymous",
-      isHydrated: false,
-      setSession: (session) =>
-        set({
-          user: session.user,
-          accessToken: session.accessToken,
-          status: "authenticated",
-        }),
-      clearSession: () =>
-        set({
-          user: null,
-          accessToken: null,
-          status: "anonymous",
-        }),
-      markHydrated: () => set({ isHydrated: true }),
+      token: null,
+      setAuth: (user, token) => set({ user, token }),
+      logout: () => set({ user: null, token: null }),
     }),
     {
-      name: storageKeys.authSession,
-      storage: createJSONStorage(() => localStorage),
-      partialize: ({ user, accessToken, status }) => ({
-        user,
-        accessToken,
-        status,
-      }),
-      onRehydrateStorage: () => (state) => {
-        state?.markHydrated();
-      },
+      name: "auth-storage",
     },
   ),
 );

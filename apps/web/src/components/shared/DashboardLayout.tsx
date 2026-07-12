@@ -72,35 +72,11 @@ export function DashboardLayout() {
   };
 
   if (!user) {
-    // Show a quick login selector if not authenticated
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-background">
-        <div className="surface-card w-full max-w-md p-8">
-          <h1 className="mb-6 text-center text-2xl font-bold">
-            AssetFlow Dev Login
-          </h1>
-          <div className="flex flex-col gap-3">
-            {users.map((u) => (
-              <Button
-                key={u.id}
-                variant="outline"
-                className="justify-start"
-                onClick={() => handleRoleSwitch(u)}
-              >
-                <span className="font-semibold">{u.name}</span>
-                <span className="ml-auto text-muted-foreground">
-                  ({u.role})
-                </span>
-              </Button>
-            ))}
-          </div>
-        </div>
-      </div>
-    );
+    return null; // Should be caught by ProtectedRoute, but just in case
   }
 
   return (
-    <div className="flex min-h-screen bg-background">
+    <div className="flex min-h-screen">
       {/* Sidebar */}
       <aside className="hidden w-64 border-r border-border bg-surface/50 backdrop-blur-xl lg:block">
         <div className="p-6">

@@ -61,6 +61,99 @@ api.interceptors.response.use(
         };
       }
 
+      if (url?.includes("/auth/login") && method === "POST") {
+        try {
+          const body =
+            typeof error.config?.data === "string"
+              ? JSON.parse(error.config.data)
+              : error.config?.data || {};
+          const user = db.users.find((u) => u.email === body.email);
+
+          if (!user || body.password !== "password123") {
+            return Promise.reject({
+              response: {
+                status: 401,
+                data: {
+                  success: false,
+                  error: "Invalid credentials. Use 'password123'.",
+                },
+              },
+            });
+          }
+
+          return {
+            data: {
+              success: true,
+              data: { user, token: `mock-jwt-${user.id}` },
+            },
+            status: 200,
+            statusText: "OK",
+            headers: {},
+            config: error.config!,
+          };
+        } catch (e) {
+          console.error("Login mock error", e);
+          return Promise.reject({
+            response: {
+              status: 400,
+              data: { success: false, error: "Bad Request" },
+            },
+          });
+        }
+      }
+
+      if (url?.includes("/auth/signup") && method === "POST") {
+        try {
+          const body =
+            typeof error.config?.data === "string"
+              ? JSON.parse(error.config.data)
+              : error.config?.data || {};
+
+          if (db.users.find((u) => u.email === body.email)) {
+            return Promise.reject({
+              response: {
+                status: 400,
+                data: {
+                  success: false,
+                  error: "User already exists with this email.",
+                },
+              },
+            });
+          }
+
+          // Create a mock user
+          const newUser = {
+            id: `u${Date.now()}`,
+            name: body.name || "New User",
+            email: body.email,
+            role: "EMPLOYEE" as const,
+            status: "Active" as const,
+          };
+
+          // Normally we'd push to db.users, but mockDb isn't strictly updating its initial state in this simplified interceptor.
+          // For the hackathon frontend, just returning it is enough to get into the app!
+
+          return {
+            data: {
+              success: true,
+              data: { user: newUser, token: `mock-jwt-${newUser.id}` },
+            },
+            status: 201,
+            statusText: "Created",
+            headers: {},
+            config: error.config!,
+          };
+        } catch (e) {
+          console.error("Signup mock error", e);
+          return Promise.reject({
+            response: {
+              status: 400,
+              data: { success: false, error: "Bad Request" },
+            },
+          });
+        }
+      }
+
       if (url?.includes("/dashboard") && method === "GET") {
         const kpis = {
           assetsAvailable: db.assets.filter((a) => a.status === "Available")

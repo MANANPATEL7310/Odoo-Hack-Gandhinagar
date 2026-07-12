@@ -1,5 +1,9 @@
-import { useState } from "react";
-import { useMockDb } from "../../stores/mock-db";
+import { useEffect, useState } from "react";
+import {
+  getMaintenanceRepository,
+  getAssetsRepository,
+} from "@/services/data/repositories";
+import type { MaintenanceRequest, Asset } from "@/services/data/types/domain";
 import { Button } from "../../components/ui/button";
 import {
   Table,
@@ -14,8 +18,31 @@ import { Plus } from "lucide-react";
 import { MaintenanceFormDialog } from "./MaintenanceFormDialog";
 
 export function MaintenancePage() {
-  const { maintenanceRequests, assets, users } = useMockDb();
+  const [maintenanceRequests, setMaintenanceRequests] = useState<
+    MaintenanceRequest[]
+  >([]);
+  const [assets, setAssets] = useState<Asset[]>([]);
   const [isFormOpen, setIsFormOpen] = useState(false);
+
+  useEffect(() => {
+    async function loadData() {
+      try {
+        const [reqsData, assetsData] = await Promise.all([
+          getMaintenanceRepository()
+            .listMaintenanceRequests()
+            .catch(() => []),
+          getAssetsRepository()
+            .listAssets()
+            .catch(() => []),
+        ]);
+        setMaintenanceRequests(reqsData);
+        setAssets(assetsData);
+      } catch (err) {
+        console.error(err);
+      }
+    }
+    loadData();
+  }, []);
 
   return (
     <div className="space-y-6 p-2 lg:p-0">
@@ -57,7 +84,7 @@ export function MaintenancePage() {
             <TableBody>
               {maintenanceRequests.map((mr) => {
                 const asset = assets.find((x) => x.id === mr.assetId);
-                const user = users.find((x) => x.id === mr.raisedByEmployeeId);
+                const userName = "Employee"; // Mock until we have employees repository
 
                 let badgeVariant: "default" | "success" | "warning" = "default";
                 if (mr.status === "PENDING") badgeVariant = "default";
@@ -67,7 +94,7 @@ export function MaintenancePage() {
                 return (
                   <TableRow key={mr.id}>
                     <TableCell className="font-medium">{asset?.name}</TableCell>
-                    <TableCell>{user?.name}</TableCell>
+                    <TableCell>{userName}</TableCell>
                     <TableCell className="max-w-xs truncate">
                       {mr.issueDescription}
                     </TableCell>

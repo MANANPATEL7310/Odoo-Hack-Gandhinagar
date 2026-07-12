@@ -140,3 +140,11 @@ export interface UploadedFile {
   url: string;
   key: string;
 }
+
+export interface AuditCycle {
+  id: string;
+  scopeDepartmentId?: string;
+  createdByEmployeeId: string;
+  startDate: string;
+  status: "OPEN" | "CLOSED";
+}

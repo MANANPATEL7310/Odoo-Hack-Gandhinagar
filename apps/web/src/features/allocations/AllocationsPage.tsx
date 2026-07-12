@@ -1,5 +1,15 @@
-import { useState } from "react";
-import { useMockDb } from "../../stores/mock-db";
+import { useEffect, useState } from "react";
+import {
+  getAllocationsRepository,
+  getAssetsRepository,
+  getOrgRepository,
+} from "@/services/data/repositories";
+import type {
+  Allocation,
+  TransferRequest,
+  Asset,
+  Department,
+} from "@/services/data/types/domain";
 import { Tabs } from "../../components/ui/tabs";
 import { Button } from "../../components/ui/button";
 import {
@@ -15,9 +25,42 @@ import { HandHeart, Plus } from "lucide-react";
 import { AllocationFormDialog } from "./AllocationFormDialog";
 
 export function AllocationsPage() {
-  const { allocations, transferRequests, assets, users, departments } =
-    useMockDb();
+  const [allocations, setAllocations] = useState<Allocation[]>([]);
+  const [transferRequests, setTransferRequests] = useState<TransferRequest[]>(
+    [],
+  );
+  const [assets, setAssets] = useState<Asset[]>([]);
+  const [departments, setDepartments] = useState<Department[]>([]);
   const [isFormOpen, setIsFormOpen] = useState(false);
+
+  useEffect(() => {
+    async function loadData() {
+      try {
+        const [allocationsData, transfersData, assetsData, departmentsData] =
+          await Promise.all([
+            getAllocationsRepository()
+              .listAllocations()
+              .catch(() => []),
+            getAllocationsRepository()
+              .listTransferRequests()
+              .catch(() => []),
+            getAssetsRepository()
+              .listAssets()
+              .catch(() => []),
+            getOrgRepository()
+              .listDepartments()
+              .catch(() => []),
+          ]);
+        setAllocations(allocationsData);
+        setTransferRequests(transfersData);
+        setAssets(assetsData);
+        setDepartments(departmentsData);
+      } catch (err) {
+        console.error(err);
+      }
+    }
+    loadData();
+  }, []);
 
   const availableAssets = assets.filter((a) => a.status === "AVAILABLE");
 
@@ -27,7 +70,7 @@ export function AllocationsPage() {
         isOpen={isFormOpen}
         onClose={() => setIsFormOpen(false)}
         assets={availableAssets}
-        employees={users}
+        employees={[]}
         onSubmit={async (payload) => {
           console.log("Submit allocation", payload);
           // In real implementation, call repository:
@@ -74,15 +117,13 @@ export function AllocationsPage() {
                       <TableBody>
                         {allocations.map((a) => {
                           const asset = assets.find((x) => x.id === a.assetId);
-                          const holder = users.find(
-                            (x) => x.id === a.holderEmployeeId,
-                          );
+                          const holderName = "Employee";
                           return (
                             <TableRow key={a.id}>
                               <TableCell className="font-medium">
                                 {asset?.name}
                               </TableCell>
-                              <TableCell>{holder?.name}</TableCell>
+                              <TableCell>{holderName}</TableCell>
                               <TableCell>
                                 {new Date(a.allocatedAt).toLocaleDateString()}
                               </TableCell>
@@ -136,9 +177,7 @@ export function AllocationsPage() {
                       <TableBody>
                         {transferRequests.map((tr) => {
                           const asset = assets.find((x) => x.id === tr.assetId);
-                          const requester = users.find(
-                            (x) => x.id === tr.requestedByEmployeeId,
-                          );
+                          const requesterName = "Employee";
                           const targetDept = departments.find(
                             (x) => x.id === tr.targetDepartmentId,
                           );
@@ -159,7 +198,7 @@ export function AllocationsPage() {
                               <TableCell className="font-medium">
                                 {asset?.name}
                               </TableCell>
-                              <TableCell>{requester?.name}</TableCell>
+                              <TableCell>{requesterName}</TableCell>
                               <TableCell>
                                 {targetDept?.name || "Unknown"}
                               </TableCell>

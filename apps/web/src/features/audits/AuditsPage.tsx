@@ -1,4 +1,9 @@
-import { useMockDb } from "../../stores/mock-db";
+import { useEffect, useState } from "react";
+import {
+  getAuditsRepository,
+  getOrgRepository,
+} from "@/services/data/repositories";
+import type { AuditCycle, Department } from "@/services/data/types/domain";
 import {
   Table,
   TableBody,
@@ -12,7 +17,29 @@ import { ClipboardCheck } from "lucide-react";
 import { Button } from "../../components/ui/button";
 
 export function AuditsPage() {
-  const { auditCycles: audits, departments, users } = useMockDb();
+  const [audits, setAudits] = useState<AuditCycle[]>([]);
+  const [departments, setDepartments] = useState<Department[]>([]);
+  // We don't have a users repository yet, so we'll just mock the user display for now or leave it blank
+
+  useEffect(() => {
+    async function loadData() {
+      try {
+        const [auditsData, deptsData] = await Promise.all([
+          getAuditsRepository()
+            .listAuditCycles()
+            .catch(() => []),
+          getOrgRepository()
+            .listDepartments()
+            .catch(() => []),
+        ]);
+        setAudits(auditsData);
+        setDepartments(deptsData);
+      } catch (err) {
+        console.error(err);
+      }
+    }
+    loadData();
+  }, []);
 
   return (
     <div className="space-y-6 p-2 lg:p-0">
@@ -48,9 +75,7 @@ export function AuditsPage() {
                 const dept = departments.find(
                   (x) => x.id === a.scopeDepartmentId,
                 );
-                const auditor = users.find(
-                  (x) => x.id === a.createdByEmployeeId,
-                );
+                const auditorName = "Auditor"; // Mapped from real user data when employee repository is available
 
                 let badgeVariant: "default" | "success" | "warning" = "default";
                 if (a.status === "OPEN") badgeVariant = "warning";
@@ -61,7 +86,7 @@ export function AuditsPage() {
                     <TableCell className="font-medium">
                       {dept?.name || "All Departments"}
                     </TableCell>
-                    <TableCell>{auditor?.name}</TableCell>
+                    <TableCell>{auditorName}</TableCell>
                     <TableCell>
                       {new Date(a.startDate).toLocaleDateString()}
                     </TableCell>

@@ -1,12 +1,12 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import type { Employee } from "./mock-db";
+import type { AuthUser } from "@template/shared";
 
 interface AuthState {
-  user: Employee | null;
+  user: AuthUser | null;
   accessToken: string | null;
   isHydrated: boolean;
-  setAuth: (user: Employee, accessToken: string) => void;
+  setAuth: (user: AuthUser, accessToken: string) => void;
   setHydrated: (state: boolean) => void;
   logout: () => void;
 }

@@ -1,5 +1,9 @@
-import { useState } from "react";
-import { useMockDb } from "../../stores/mock-db";
+import { useEffect, useState } from "react";
+import {
+  getBookingsRepository,
+  getAssetsRepository,
+} from "@/services/data/repositories";
+import type { Booking, Asset } from "@/services/data/types/domain";
 import { Button } from "../../components/ui/button";
 import {
   Table,
@@ -14,8 +18,29 @@ import { Plus } from "lucide-react";
 import { BookingFormDialog } from "./BookingFormDialog";
 
 export function BookingsPage() {
-  const { bookings, assets, users } = useMockDb();
+  const [bookings, setBookings] = useState<Booking[]>([]);
+  const [assets, setAssets] = useState<Asset[]>([]);
   const [isFormOpen, setIsFormOpen] = useState(false);
+
+  useEffect(() => {
+    async function loadData() {
+      try {
+        const [bookingsData, assetsData] = await Promise.all([
+          getBookingsRepository()
+            .listBookings()
+            .catch(() => []),
+          getAssetsRepository()
+            .listAssets()
+            .catch(() => []),
+        ]);
+        setBookings(bookingsData);
+        setAssets(assetsData);
+      } catch (err) {
+        console.error(err);
+      }
+    }
+    loadData();
+  }, []);
 
   const bookableAssets = assets.filter((a) => a.isBookable);
 
@@ -25,7 +50,7 @@ export function BookingsPage() {
         isOpen={isFormOpen}
         onClose={() => setIsFormOpen(false)}
         assets={bookableAssets}
-        employees={users}
+        employees={[]}
         onSubmit={async (payload) => {
           console.log("Submit booking", payload);
           // In real implementation, call repository
@@ -65,7 +90,7 @@ export function BookingsPage() {
             <TableBody>
               {bookings.map((b) => {
                 const asset = assets.find((x) => x.id === b.resourceAssetId);
-                const user = users.find((x) => x.id === b.bookedByEmployeeId);
+                const userName = "Employee";
 
                 let badgeVariant:
                   | "default"
@@ -80,7 +105,7 @@ export function BookingsPage() {
                 return (
                   <TableRow key={b.id}>
                     <TableCell className="font-medium">{asset?.name}</TableCell>
-                    <TableCell>{user?.name}</TableCell>
+                    <TableCell>{userName}</TableCell>
                     <TableCell>
                       {new Date(b.startTime).toLocaleString()}
                     </TableCell>

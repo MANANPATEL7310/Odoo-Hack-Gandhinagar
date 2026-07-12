@@ -35,6 +35,9 @@ importers:
       prettier:
         specifier: ^3.6.2
         version: 3.8.1
+      prisma:
+        specifier: ^5.22.0
+        version: 5.22.0
       turbo:
         specifier: ^2.5.8
         version: 2.9.3

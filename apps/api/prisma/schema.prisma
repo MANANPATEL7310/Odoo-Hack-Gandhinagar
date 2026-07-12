@@ -7,14 +7,367 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  name      String
-  password  String
-  role      String   @default("member")
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+// ─── Enums ──────────────────────────────────────────────────────────────────
+
+enum Role {
+  EMPLOYEE
+  DEPARTMENT_HEAD
+  ASSET_MANAGER
+  ADMIN
 }
 
-// ── Add your models below this line ──
+enum EmployeeStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum DepartmentStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum CategoryStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum AssetStatus {
+  AVAILABLE
+  ALLOCATED
+  RESERVED
+  UNDER_MAINTENANCE
+  LOST
+  RETIRED
+  DISPOSED
+}
+
+enum AllocationStatus {
+  ACTIVE
+  RETURNED
+}
+
+enum TransferStatus {
+  REQUESTED
+  APPROVED
+  REJECTED
+  CANCELLED
+}
+
+enum BookingStatus {
+  UPCOMING
+  ONGOING
+  COMPLETED
+  CANCELLED
+}
+
+enum MaintenancePriority {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum MaintenanceStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  TECHNICIAN_ASSIGNED
+  IN_PROGRESS
+  RESOLVED
+}
+
+enum AuditStatus {
+  OPEN
+  CLOSED
+}
+
+enum AuditItemStatus {
+  UNVERIFIED
+  VERIFIED
+  MISSING
+  DAMAGED
+  UNRESOLVED
+}
+
+// ─── Models ─────────────────────────────────────────────────────────────────
+
+model Department {
+  id                 String           @id @default(cuid())
+  name               String           @unique
+  headEmployeeId     String?
+  parentDepartmentId String?
+  status             DepartmentStatus @default(ACTIVE)
+  createdAt          DateTime         @default(now())
+  updatedAt          DateTime         @updatedAt
+
+  head           Employee?         @relation("DepartmentHead", fields: [headEmployeeId], references: [id], onDelete: SetNull)
+  parent         Department?       @relation("DepartmentParent", fields: [parentDepartmentId], references: [id])
+  children       Department[]      @relation("DepartmentParent")
+  employees      Employee[]        @relation("EmployeeDepartment")
+  assets         Asset[]           @relation("AssetLocation")
+  allocations    Allocation[]      @relation("AllocationDepartment")
+  auditCycles    AuditCycle[]      @relation("AuditCycleDepartment")
+  targetRequests TransferRequest[] @relation("TransferTargetDepartment")
+
+  @@index([parentDepartmentId])
+  @@index([status])
+}
+
+model AssetCategory {
+  id          String         @id @default(cuid())
+  name        String         @unique
+  description String?
+  fieldSchema Json?          // Defines optional fields: array of { name: string, type: 'text' | 'number' | 'date' }
+  status      CategoryStatus @default(ACTIVE)
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  assets Asset[]
+
+  @@index([status])
+}
+
+model Employee {
+  id           String         @id @default(cuid())
+  name         String
+  email        String         @unique
+  passwordHash String
+  departmentId String?
+  role         Role           @default(EMPLOYEE)
+  status       EmployeeStatus @default(ACTIVE)
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+
+  department                    Department?          @relation("EmployeeDepartment", fields: [departmentId], references: [id], onDelete: SetNull)
+  headedDepartments             Department[]         @relation("DepartmentHead")
+  allocations                   Allocation[]         @relation("AllocationEmployee")
+  raisedMaintenanceRequests     MaintenanceRequest[] @relation("RaisedBy")
+  decidedMaintenanceRequests    MaintenanceRequest[] @relation("DecidedBy")
+  technicianMaintenanceRequests MaintenanceRequest[] @relation("Technician")
+  bookings                      Booking[]            @relation("BookingEmployee")
+  auditedCycles                 AuditCycleAuditor[]
+  notifications                 Notification[]       @relation("NotificationRecipient")
+  activityLogs                  ActivityLog[]        @relation("ActivityActor")
+  createdAuditCycles            AuditCycle[]         @relation("AuditCycleCreator")
+  markedAuditItems              AuditCycleItem[]     @relation("AuditItemMarker")
+  transferRequestsRequested     TransferRequest[]    @relation("TransferRequester")
+  transferRequestsDecided       TransferRequest[]    @relation("TransferDecider")
+  transferRequestsTarget        TransferRequest[]    @relation("TransferTargetEmployee")
+
+  @@index([departmentId])
+  @@index([role])
+  @@index([status])
+}
+
+model Asset {
+  id                   String      @id @default(cuid())
+  assetTag             String      @unique
+  name                 String
+  categoryId           String
+  serialNumber         String?     @unique
+  qrCode               String?
+  acquisitionDate      DateTime?
+  acquisitionCost      Float?
+  condition            String?
+  locationDepartmentId String?
+  status               AssetStatus @default(AVAILABLE)
+  isBookable           Boolean     @default(false)
+  photoUrls            String[]
+  documentUrls         String[]
+  categoryMetadata     Json?       // Dynamic attributes complying with AssetCategory.fieldSchema
+  createdAt            DateTime    @default(now())
+  updatedAt            DateTime    @updatedAt
+
+  category            AssetCategory        @relation(fields: [categoryId], references: [id])
+  location            Department?          @relation("AssetLocation", fields: [locationDepartmentId], references: [id], onDelete: SetNull)
+  allocations         Allocation[]
+  bookings            Booking[]
+  maintenanceRequests MaintenanceRequest[]
+  transferRequests    TransferRequest[]
+  auditCycleItems     AuditCycleItem[]
+
+  @@index([status])
+  @@index([categoryId])
+  @@index([isBookable])
+  @@index([locationDepartmentId])
+}
+
+model Allocation {
+  id                 String           @id @default(cuid())
+  assetId            String
+  holderEmployeeId   String?
+  holderDepartmentId String?
+  allocatedAt        DateTime         @default(now())
+  expectedReturnDate DateTime?
+  returnedAt         DateTime?
+  conditionAtReturn  String?
+  status             AllocationStatus @default(ACTIVE)
+  createdAt          DateTime         @default(now())
+  updatedAt          DateTime         @updatedAt
+
+  asset            Asset            @relation(fields: [assetId], references: [id])
+  holderEmployee   Employee?        @relation("AllocationEmployee", fields: [holderEmployeeId], references: [id], onDelete: SetNull)
+  holderDepartment Department?      @relation("AllocationDepartment", fields: [holderDepartmentId], references: [id], onDelete: SetNull)
+  transferRequests TransferRequest[]
+
+  // Note: To enforce that an asset can only have one active allocation,
+  // we will add a database-level partial unique index via raw SQL migration:
+  // CREATE UNIQUE INDEX ON "Allocation"("assetId") WHERE "returnedAt" IS NULL;
+
+  @@index([assetId])
+  @@index([holderEmployeeId])
+  @@index([holderDepartmentId])
+  @@index([expectedReturnDate])
+}
+
+model TransferRequest {
+  id                    String         @id @default(cuid())
+  assetId               String
+  currentAllocationId   String
+  requestedByEmployeeId String
+  targetEmployeeId      String?
+  targetDepartmentId    String?
+  reason                String?
+  status                TransferStatus @default(REQUESTED)
+  decidedByEmployeeId   String?
+  decidedAt             DateTime?
+  createdAt             DateTime       @default(now())
+  updatedAt             DateTime       @updatedAt
+
+  asset             Asset        @relation(fields: [assetId], references: [id])
+  currentAllocation Allocation   @relation(fields: [currentAllocationId], references: [id])
+  requestedBy       Employee     @relation("TransferRequester", fields: [requestedByEmployeeId], references: [id])
+  targetEmployee    Employee?    @relation("TransferTargetEmployee", fields: [targetEmployeeId], references: [id], onDelete: SetNull)
+  targetDepartment  Department?  @relation("TransferTargetDepartment", fields: [targetDepartmentId], references: [id], onDelete: SetNull)
+  decidedBy         Employee?    @relation("TransferDecider", fields: [decidedByEmployeeId], references: [id], onDelete: SetNull)
+
+  @@index([assetId])
+  @@index([status])
+}
+
+model Booking {
+  id                 String        @id @default(cuid())
+  resourceAssetId    String
+  bookedByEmployeeId String
+  startTime          DateTime
+  endTime            DateTime
+  status             BookingStatus @default(UPCOMING)
+  createdAt          DateTime      @default(now())
+  updatedAt          DateTime      @updatedAt
+
+  resourceAsset Asset    @relation(fields: [resourceAssetId], references: [id])
+  bookedBy      Employee @relation("BookingEmployee", fields: [bookedByEmployeeId], references: [id])
+
+  // Exclusion constraints or conditional check for overlap must be managed
+  // via transactions at application service level or PostgreSQL raw triggers.
+
+  @@index([resourceAssetId, startTime, endTime])
+}
+
+model MaintenanceRequest {
+  id                   String              @id @default(cuid())
+  assetId              String
+  raisedByEmployeeId   String
+  issueDescription     String
+  priority             MaintenancePriority @default(MEDIUM)
+  photoUrl             String?
+  status               MaintenanceStatus   @default(PENDING)
+  decidedByEmployeeId  String?
+  decidedAt            DateTime?
+  rejectionReason      String?
+  technicianEmployeeId String?
+  resolvedAt           DateTime?
+  createdAt            DateTime            @default(now())
+  updatedAt            DateTime            @updatedAt
+
+  asset      Asset     @relation(fields: [assetId], references: [id])
+  raisedBy   Employee  @relation("RaisedBy", fields: [raisedByEmployeeId], references: [id])
+  decidedBy  Employee? @relation("DecidedBy", fields: [decidedByEmployeeId], references: [id], onDelete: SetNull)
+  technician Employee? @relation("Technician", fields: [technicianEmployeeId], references: [id], onDelete: SetNull)
+
+  @@index([assetId])
+  @@index([status])
+  @@index([priority])
+}
+
+model AuditCycle {
+  id                  String      @id @default(cuid())
+  scopeDepartmentId   String?
+  scopeLocation       String?
+  startDate           DateTime
+  endDate             DateTime
+  status              AuditStatus @default(OPEN)
+  createdByEmployeeId String
+  closedAt            DateTime?
+  createdAt           DateTime    @default(now())
+  updatedAt           DateTime    @updatedAt
+
+  scopeDepartment Department?         @relation("AuditCycleDepartment", fields: [scopeDepartmentId], references: [id], onDelete: SetNull)
+  createdBy       Employee            @relation("AuditCycleCreator", fields: [createdByEmployeeId], references: [id])
+  auditors        AuditCycleAuditor[]
+  items           AuditCycleItem[]
+
+  @@index([status])
+  @@index([scopeDepartmentId])
+}
+
+model AuditCycleAuditor {
+  auditCycleId String
+  employeeId   String
+  createdAt    DateTime @default(now())
+
+  auditCycle AuditCycle @relation(fields: [auditCycleId], references: [id], onDelete: Cascade)
+  employee   Employee   @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  @@id([auditCycleId, employeeId])
+}
+
+model AuditCycleItem {
+  id                 String          @id @default(cuid())
+  auditCycleId       String
+  assetId            String
+  status             AuditItemStatus @default(UNVERIFIED)
+  markedByEmployeeId String?
+  markedAt           DateTime?
+  notes              String?
+
+  auditCycle AuditCycle @relation(fields: [auditCycleId], references: [id], onDelete: Cascade)
+  asset      Asset      @relation(fields: [assetId], references: [id])
+  markedBy   Employee?  @relation("AuditItemMarker", fields: [markedByEmployeeId], references: [id], onDelete: SetNull)
+
+  @@unique([auditCycleId, assetId])
+  @@index([status])
+}
+
+model Notification {
+  id                  String   @id @default(cuid())
+  recipientEmployeeId String
+  type                String   // Notification classification tag
+  message             String
+  relatedEntityType   String?
+  relatedEntityId     String?
+  isRead              Boolean  @default(false)
+  createdAt           DateTime @default(now())
+
+  recipient Employee @relation("NotificationRecipient", fields: [recipientEmployeeId], references: [id], onDelete: Cascade)
+
+  @@index([recipientEmployeeId])
+  @@index([isRead])
+  @@index([createdAt])
+}
+
+model ActivityLog {
+  id               String   @id @default(cuid())
+  actorEmployeeId  String
+  action           String   // Action audit tag
+  targetEntityType String
+  targetEntityId   String
+  metadata         Json?
+  createdAt        DateTime @default(now())
+
+  actor Employee @relation("ActivityActor", fields: [actorEmployeeId], references: [id], onDelete: Cascade)
+
+  @@index([actorEmployeeId])
+  @@index([targetEntityType, targetEntityId])
+  @@index([createdAt])
+}

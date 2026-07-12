@@ -1,28 +1,44 @@
 import React from "react";
-import { Outlet } from "react-router-dom";
+import { Navigate, Outlet } from "react-router-dom";
 import { useAuthStore } from "../../stores/auth-store";
+import { api } from "../../lib/api-client";
 
 export function ProtectedRoute() {
-  const { user, token, setAuth } = useAuthStore();
+  const { user, accessToken, setAuth, logout, isHydrated } = useAuthStore();
+  const [isValidating, setIsValidating] = React.useState(true);
 
   React.useEffect(() => {
-    // DEV BYPASS: Auto-login as Admin to bypass login screen during development
-    if (!user || !token) {
-      setAuth(
-        {
-          id: "u1",
-          name: "Alice Admin",
-          email: "alice@acme.com",
-          role: "ADMIN",
-          status: "Active",
-        },
-        "dev-bypass-token",
-      );
-    }
-  }, [user, token, setAuth]);
+    if (!isHydrated) return;
 
-  if (!user || !token) {
-    return null; // Wait for auto-login
+    if (!accessToken) {
+      setIsValidating(false);
+      return;
+    }
+
+    async function validateToken() {
+      try {
+        const res = await api.get("/auth/me");
+        setAuth(res.data.data.user, accessToken as string);
+      } catch {
+        logout();
+      } finally {
+        setIsValidating(false);
+      }
+    }
+
+    validateToken();
+  }, [accessToken, isHydrated, setAuth, logout]);
+
+  if (!isHydrated || isValidating) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="size-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+      </div>
+    );
+  }
+
+  if (!user || !accessToken) {
+    return <Navigate to="/login" replace />;
   }
 
   return <Outlet />;

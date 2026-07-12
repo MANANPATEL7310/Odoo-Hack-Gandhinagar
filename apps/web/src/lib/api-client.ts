@@ -12,7 +12,7 @@ export const api = axios.create({
 });
 
 api.interceptors.request.use((config: InternalAxiosRequestConfig) => {
-  const token = useAuthStore.getState().token;
+  const token = useAuthStore.getState().accessToken;
   if (token && config.headers) {
     config.headers.Authorization = `Bearer ${token}`;
   }
@@ -31,16 +31,10 @@ api.interceptors.response.use(
     }
 
     await delay(500); // Simulated latency
-
-    // In a real environment with the backend running, we might disable this block.
-    // For now, since the user wants to work actively without the backend, we intercept and mock.
-    // This is a minimal mock for GET /auth/me to demonstrate the concept.
     return response;
   },
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   async (error: any) => {
-    // If the actual backend is not running, Axios will throw a Network Error.
-    // We catch it and use our mock DB.
     if (
       error.isMockTrigger ||
       error.message === "Network Error" ||
@@ -96,7 +90,7 @@ api.interceptors.response.use(
           return {
             data: {
               success: true,
-              data: { user, token: `mock-jwt-${user.id}` },
+              data: { user, accessToken: `mock-jwt-${user.id}` },
             },
             status: 200,
             statusText: "OK",
@@ -133,22 +127,20 @@ api.interceptors.response.use(
             });
           }
 
-          // Create a mock user
           const newUser = {
             id: `u${Date.now()}`,
             name: body.name || "New User",
             email: body.email,
+            passwordHash: "hash",
             role: "EMPLOYEE" as const,
-            status: "Active" as const,
+            status: "ACTIVE" as const,
+            createdAt: new Date().toISOString(),
           };
-
-          // Normally we'd push to db.users, but mockDb isn't strictly updating its initial state in this simplified interceptor.
-          // For the hackathon frontend, just returning it is enough to get into the app!
 
           return {
             data: {
               success: true,
-              data: { user: newUser, token: `mock-jwt-${newUser.id}` },
+              data: { user: newUser, accessToken: `mock-jwt-${newUser.id}` },
             },
             status: 201,
             statusText: "Created",
@@ -168,13 +160,18 @@ api.interceptors.response.use(
 
       if (url?.includes("/dashboard") && method === "GET") {
         const kpis = {
-          assetsAvailable: db.assets.filter((a) => a.status === "Available")
+          assetsAvailable: db.assets.filter((a) => a.status === "AVAILABLE")
             .length,
-          assetsAllocated: db.assets.filter((a) => a.status === "Allocated")
+          assetsAllocated: db.assets.filter((a) => a.status === "ALLOCATED")
             .length,
-          maintenanceToday: 0,
-          activeBookings: 0,
-          pendingTransfers: 0,
+          maintenanceToday: db.maintenanceRequests.filter(
+            (r) => r.status === "IN_PROGRESS",
+          ).length,
+          activeBookings: db.bookings.filter((b) => b.status === "ONGOING")
+            .length,
+          pendingTransfers: db.transferRequests.filter(
+            (t) => t.status === "REQUESTED",
+          ).length,
           upcomingReturns: 0,
         };
         return {
@@ -192,6 +189,19 @@ api.interceptors.response.use(
             success: true,
             data: db.assets,
             pagination: { page: 1, pageSize: 10, total: db.assets.length },
+          },
+          status: 200,
+          statusText: "OK",
+          headers: {},
+          config: error.config!,
+        };
+      }
+
+      if (url?.includes("/uploads") && method === "POST") {
+        return {
+          data: {
+            success: true,
+            data: { url: "/placeholder.png", key: `mock-upload-${Date.now()}` },
           },
           status: 200,
           statusText: "OK",

@@ -258,7 +258,7 @@
 
   @media (min-width: 1024px) {
     .dashboard-shell {
-      grid-template-columns: minmax(0, 1fr) 310px;
+      grid-template-columns: 310px minmax(0, 1fr);
       gap: 1.25rem;
       padding-left: 1.5rem;
       padding-right: 1.5rem;

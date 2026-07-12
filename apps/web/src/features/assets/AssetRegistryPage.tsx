@@ -31,25 +31,35 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../../components/ui/select";
+import { AssetDetailDrawer } from "./AssetDetailDrawer";
+import { AssetFormDialog } from "./AssetFormDialog";
 
 export function AssetRegistryPage() {
   const [assets, setAssets] = useState<Asset[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("All");
+
+  const [selectedAsset, setSelectedAsset] = useState<Asset | null>(null);
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [isFormOpen, setIsFormOpen] = useState(false);
+
   const assetCategories = useMockDb((state) => state.assetCategories);
+  const departments = useMockDb((state) => state.departments);
+
+  const fetchAssets = async () => {
+    setLoading(true);
+    try {
+      const res = await api.get("/assets");
+      setAssets(res.data.data);
+    } catch (error) {
+      console.error("Failed to load assets", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    async function fetchAssets() {
-      try {
-        const res = await api.get("/assets");
-        setAssets(res.data.data);
-      } catch (error) {
-        console.error("Failed to load assets", error);
-      } finally {
-        setLoading(false);
-      }
-    }
     fetchAssets();
   }, []);
 
@@ -67,7 +77,9 @@ export function AssetRegistryPage() {
       asset.name.toLowerCase().includes(query) ||
       asset.assetTag.toLowerCase().includes(query) ||
       asset.serialNumber?.toLowerCase().includes(query);
-    const matchesStatus = status === "All" || asset.status === status;
+    const matchesStatus =
+      status === "All" ||
+      asset.status === status.toUpperCase().replace(" ", "_");
 
     return matchesSearch && matchesStatus;
   });
@@ -81,13 +93,13 @@ export function AssetRegistryPage() {
     },
     {
       label: "Available",
-      value: assets.filter((asset) => asset.status === "Available").length,
+      value: assets.filter((asset) => asset.status === "AVAILABLE").length,
       icon: CheckCircle2,
       tone: "text-secondary",
     },
     {
       label: "Allocated",
-      value: assets.filter((asset) => asset.status === "Allocated").length,
+      value: assets.filter((asset) => asset.status === "ALLOCATED").length,
       icon: Laptop,
       tone: "text-primary",
     },
@@ -100,27 +112,48 @@ export function AssetRegistryPage() {
   ];
 
   const statusTone = (assetStatus: Asset["status"]) => {
-    if (assetStatus === "Available") {
-      return "bg-secondary/10 text-secondary";
-    }
-    if (assetStatus === "Allocated") {
-      return "bg-primary/10 text-primary";
-    }
-    if (assetStatus === "Under Maintenance") {
+    if (assetStatus === "AVAILABLE") return "bg-secondary/10 text-secondary";
+    if (assetStatus === "ALLOCATED") return "bg-primary/10 text-primary";
+    if (assetStatus === "UNDER_MAINTENANCE")
       return "bg-warning/10 text-warning";
-    }
+    if (assetStatus === "RESERVED") return "bg-primary/10 text-primary";
     return "bg-danger/10 text-danger";
   };
 
   const StatusIcon = (assetStatus: Asset["status"]) => {
-    if (assetStatus === "Available") return CheckCircle2;
-    if (assetStatus === "Under Maintenance") return Wrench;
-    if (assetStatus === "Retired") return Archive;
-    return ShieldAlert;
+    if (assetStatus === "AVAILABLE") return CheckCircle2;
+    if (assetStatus === "UNDER_MAINTENANCE") return Wrench;
+    if (assetStatus === "RETIRED" || assetStatus === "DISPOSED") return Archive;
+    if (assetStatus === "LOST") return ShieldAlert;
+    return Tag;
+  };
+
+  const handleRowClick = (asset: Asset) => {
+    setSelectedAsset(asset);
+    setIsDrawerOpen(true);
   };
 
   return (
     <div className="space-y-5">
+      <AssetDetailDrawer
+        asset={selectedAsset}
+        isOpen={isDrawerOpen}
+        onClose={() => setIsDrawerOpen(false)}
+        categoryName={
+          selectedAsset
+            ? categoryById[selectedAsset.categoryId] || "Unknown"
+            : ""
+        }
+      />
+
+      <AssetFormDialog
+        isOpen={isFormOpen}
+        onClose={() => setIsFormOpen(false)}
+        categories={assetCategories}
+        departments={departments}
+        onSuccess={fetchAssets}
+      />
+
       <section className="surface-card p-6 md:p-7">
         <div className="flex flex-col items-start justify-between gap-5 xl:flex-row xl:items-end">
           <div>
@@ -134,7 +167,10 @@ export function AssetRegistryPage() {
               ownership and availability signals.
             </p>
           </div>
-          <Button className="shrink-0 shadow-lg shadow-primary/20">
+          <Button
+            className="shrink-0 shadow-lg shadow-primary/20"
+            onClick={() => setIsFormOpen(true)}
+          >
             <Plus className="size-4" />
             <span>Register Asset</span>
           </Button>
@@ -222,12 +258,24 @@ export function AssetRegistryPage() {
                   filteredAssets.map((asset) => {
                     const Icon = StatusIcon(asset.status);
                     return (
-                      <TableRow key={asset.id}>
+                      <TableRow
+                        key={asset.id}
+                        className="cursor-pointer hover:bg-white/40 dark:hover:bg-white/5"
+                        onClick={() => handleRowClick(asset)}
+                      >
                         <TableCell>
                           <div className="flex items-center gap-3">
-                            <span className="flex size-10 items-center justify-center rounded-lg border border-white/50 bg-white/45 text-primary dark:border-white/10 dark:bg-white/5">
-                              <Laptop className="size-4" />
-                            </span>
+                            {asset.photoUrls?.length > 0 ? (
+                              <img
+                                src={asset.photoUrls[0]}
+                                alt=""
+                                className="size-10 rounded-lg object-cover"
+                              />
+                            ) : (
+                              <span className="flex size-10 shrink-0 items-center justify-center rounded-lg border border-white/50 bg-white/45 text-primary dark:border-white/10 dark:bg-white/5">
+                                <Laptop className="size-4" />
+                              </span>
+                            )}
                             <div>
                               <p className="font-semibold">{asset.name}</p>
                               <p className="text-xs text-muted-foreground">
@@ -244,7 +292,7 @@ export function AssetRegistryPage() {
                             className={`inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-semibold ${statusTone(asset.status)}`}
                           >
                             <Icon className="size-3.5" />
-                            {asset.status}
+                            {asset.status.replace("_", " ")}
                           </span>
                         </TableCell>
                         <TableCell>
@@ -253,7 +301,14 @@ export function AssetRegistryPage() {
                           </span>
                         </TableCell>
                         <TableCell className="text-right">
-                          <Button variant="ghost" size="sm">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleRowClick(asset);
+                            }}
+                          >
                             View
                           </Button>
                         </TableCell>

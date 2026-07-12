@@ -1,31 +1,38 @@
-import type { PropsWithChildren } from "react";
-import { cn } from "@/lib/cn";
+import * as React from "react";
+import { cn } from "../../lib/utils";
 
-const toneMap = {
-  primary: "border-primary/15 bg-primary-light/20 text-primary-dark",
-  secondary: "border-secondary/15 bg-secondary-light/20 text-secondary-dark",
-  success: "border-success/15 bg-success-light/20 text-success-dark",
-  warning: "border-warning/15 bg-warning-light/20 text-warning-dark",
-  danger: "border-danger/15 bg-danger-light/20 text-danger-dark",
-  neutral: "border-neutral/15 bg-surface-muted text-neutral",
-} as const;
-
-type BadgeTone = keyof typeof toneMap;
+export interface BadgeProps extends React.HTMLAttributes<HTMLDivElement> {
+  variant?:
+    | "default"
+    | "secondary"
+    | "success"
+    | "warning"
+    | "danger"
+    | "outline";
+}
 
 export function Badge({
-  children,
-  tone = "neutral",
   className,
-}: PropsWithChildren<{ tone?: BadgeTone; className?: string }>) {
+  variant = "default",
+  ...props
+}: BadgeProps) {
+  const variants = {
+    default: "bg-primary/10 text-primary border-primary/20",
+    secondary: "bg-secondary/10 text-secondary border-secondary/20",
+    success: "bg-success/10 text-success border-success/20",
+    warning: "bg-warning/10 text-warning border-warning/20",
+    danger: "bg-danger/10 text-danger border-danger/20",
+    outline: "border-white/30 text-foreground dark:border-white/10",
+  };
+
   return (
-    <span
+    <div
       className={cn(
-        "inline-flex items-center rounded-full border px-3 py-1 text-xs font-medium",
-        toneMap[tone],
+        "inline-flex items-center rounded-lg border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:outline-none",
+        variants[variant],
         className,
       )}
-    >
-      {children}
-    </span>
+      {...props}
+    />
   );
 }

@@ -15,12 +15,19 @@ export function SignupPage() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+
+    if (password !== confirmPassword) {
+      setError("Passwords do not match");
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -29,9 +36,9 @@ export function SignupPage() {
         email,
         password,
       });
-      const { user, token } = response.data.data;
+      const { user, accessToken } = response.data.data;
 
-      setAuth(user, token);
+      setAuth(user, accessToken);
       navigate("/dashboard", { replace: true });
     } catch (err: unknown) {
       const errObj = err as { response?: { data?: { error?: string } } };
@@ -135,6 +142,17 @@ export function SignupPage() {
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
+                  required
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="confirmPassword">Confirm Password</Label>
+                <Input
+                  id="confirmPassword"
+                  type="password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
                   required
                 />
               </div>

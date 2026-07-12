@@ -9,7 +9,12 @@ import { AssetRegistryPage } from "../features/assets/AssetRegistryPage";
 import { LoginPage } from "../features/auth/LoginPage";
 import { SignupPage } from "../features/auth/SignupPage";
 import { ProtectedRoute } from "../components/shared/ProtectedRoute";
-import { ModulePlaceholder } from "../components/shared/ModulePlaceholder";
+import { OrgSetupPage } from "../features/org-setup/OrgSetupPage";
+import { AllocationsPage } from "../features/allocations/AllocationsPage";
+import { BookingsPage } from "../features/bookings/BookingsPage";
+import { MaintenancePage } from "../features/maintenance/MaintenancePage";
+import { AuditsPage } from "../features/audits/AuditsPage";
+import { ReportsPage } from "../features/reports/ReportsPage";
 
 const router = createBrowserRouter([
   {
@@ -38,7 +43,7 @@ const router = createBrowserRouter([
           },
           {
             path: "org-setup",
-            element: <ModulePlaceholder feature="orgSetup" />,
+            element: <OrgSetupPage />,
           },
           {
             path: "assets",
@@ -46,23 +51,23 @@ const router = createBrowserRouter([
           },
           {
             path: "allocations",
-            element: <ModulePlaceholder feature="allocations" />,
+            element: <AllocationsPage />,
           },
           {
             path: "bookings",
-            element: <ModulePlaceholder feature="bookings" />,
+            element: <BookingsPage />,
           },
           {
             path: "maintenance",
-            element: <ModulePlaceholder feature="maintenance" />,
+            element: <MaintenancePage />,
           },
           {
             path: "audits",
-            element: <ModulePlaceholder feature="audits" />,
+            element: <AuditsPage />,
           },
           {
             path: "reports",
-            element: <ModulePlaceholder feature="reports" />,
+            element: <ReportsPage />,
           },
         ],
       },

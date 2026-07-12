@@ -24,9 +24,9 @@ export function LoginPage() {
 
     try {
       const response = await api.post("/auth/login", { email, password });
-      const { user, token } = response.data.data;
+      const { user, accessToken } = response.data.data;
 
-      setAuth(user, token);
+      setAuth(user, accessToken);
       navigate("/dashboard", { replace: true });
     } catch (err: unknown) {
       const errObj = err as { response?: { data?: { error?: string } } };

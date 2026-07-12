@@ -1,2 +1,2 @@
-pnpm exec lint-staged
-pnpm lint
+npx pnpm exec lint-staged
+npx pnpm lint

@@ -19,18 +19,18 @@ const features = [
     badge: "Core",
     badgeColor: "bg-primary/10 text-primary border-primary/20",
     description:
-      "Register assets with auto-generated tags (AF-0001), serial number uniqueness, category-specific fields, and a strict 7-state lifecycle machine — Available, Allocated, Reserved, Under Maintenance, Lost, Retired, Disposed.",
+      "Register assets with auto-generated tags, serial number uniqueness, category-specific fields, and a strict lifecycle machine covering availability, allocation, maintenance, loss, retirement, and disposal.",
     highlights: [
       "Auto-generated Asset Tags",
-      "7 enforced lifecycle states",
+      "Enforced lifecycle states",
       "Category-specific metadata schemas",
-      "Serial number uniqueness (409 on duplicate)",
+      "Serial number uniqueness",
     ],
   },
   {
     icon: ArrowLeftRight,
     title: "Allocation & Transfer",
-    badge: "P0",
+    badge: "Core",
     badgeColor: "bg-secondary/10 text-secondary border-secondary/20",
     description:
       "One active allocation per asset — enforced at service layer AND by a DB partial unique index. On conflict, the UI doesn't show a plain error; it guides you to a Transfer Request flow with the current holder's info.",
@@ -44,10 +44,10 @@ const features = [
   {
     icon: CalendarRange,
     title: "Resource Booking",
-    badge: "P0",
+    badge: "Core",
     badgeColor: "bg-secondary/10 text-secondary border-secondary/20",
     description:
-      "Time-slot booking with half-open interval overlap detection: a booking conflicts if start1 < end2 AND start2 < end1. Adjacent bookings (10:00–11:00 after 9:00–10:00) are correctly allowed. Concurrent requests are guarded by a DB exclusion constraint.",
+      "Time-slot booking with half-open interval overlap detection. Adjacent bookings are correctly allowed, while concurrent conflicting requests are guarded by database constraints.",
     highlights: [
       "Mathematically precise overlap rule",
       "Adjacent bookings always succeed",
@@ -58,10 +58,10 @@ const features = [
   {
     icon: Wrench,
     title: "Maintenance Workflow",
-    badge: "P0",
+    badge: "Core",
     badgeColor: "bg-warning/10 text-warning border-warning/20",
     description:
-      "5-stage approval workflow gated behind an Asset Manager. On Approved, the asset flips to Under Maintenance regardless of prior status — including Allocated. On Resolved, it correctly restores the prior allocation if it still exists.",
+      "Approval workflow gated behind an Asset Manager. On approval, the asset flips to Under Maintenance regardless of prior status. On resolution, it correctly restores the prior allocation if it still exists.",
     highlights: [
       "Pending → Approved → In Progress → Resolved",
       "Maintenance overrides Allocated status",
@@ -72,7 +72,7 @@ const features = [
   {
     icon: ClipboardCheck,
     title: "Audit Cycles",
-    badge: "P0",
+    badge: "Core",
     badgeColor: "bg-danger/10 text-danger border-danger/20",
     description:
       "Create audit cycles with a snapshotted scope (department/location), assign auditors, and let them mark each asset Verified, Missing, or Damaged. On close, Missing items auto-update to Lost and a discrepancy report is generated.",
@@ -86,7 +86,7 @@ const features = [
   {
     icon: BarChart3,
     title: "Dashboard & Reports",
-    badge: "P0/P1",
+    badge: "Analytics",
     badgeColor: "bg-primary/10 text-primary border-primary/20",
     description:
       "Role-scoped real-time KPI dashboard — Employee sees their own items, Department Head sees department scope, Admin/Asset Manager see org-wide. Reports surface utilization trends, maintenance frequency, and booking heatmaps.",
@@ -100,7 +100,7 @@ const features = [
   {
     icon: Bell,
     title: "Notifications & Activity Logs",
-    badge: "P0",
+    badge: "Core",
     badgeColor: "bg-secondary/10 text-secondary border-secondary/20",
     description:
       "Every meaningful state change emits a notification to the relevant recipient. The Activity Log is an append-only, Admin-visible compliance trail covering every entity-level action — never credentials, always context.",
@@ -152,9 +152,9 @@ export function FeaturesSection() {
               Every module your organization needs
             </h2>
             <p className="mx-auto mt-4 max-w-2xl text-base text-muted-foreground">
-              10 features from the problem statement — all P0 correctness
-              requirements implemented, not just displayed. Click any feature to
-              see what makes it rigorous.
+              Features from the problem statement with correctness requirements
+              implemented, not just displayed. Click any feature to see what
+              makes it rigorous.
             </p>
           </div>
         </Animate>

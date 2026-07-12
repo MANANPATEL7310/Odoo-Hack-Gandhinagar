@@ -58,6 +58,9 @@ export async function listAuditCycles(
             employee: { select: { id: true, name: true, email: true } },
           },
         },
+        items: {
+          select: { status: true },
+        },
         _count: { select: { items: true } },
       },
       orderBy: { createdAt: "desc" },

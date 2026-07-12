@@ -1,8 +1,7 @@
 import React from "react";
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useAuthStore } from "../../stores/auth-store";
-import { getOrgRepository } from "@/services/data/repositories";
-import type { Employee } from "@/services/data/types/domain";
+import { api } from "../../lib/api-client";
 import {
   LayoutDashboard,
   Users,
@@ -16,7 +15,6 @@ import {
   LogOut,
   Moon,
   Sun,
-  ChevronDown,
   RadioTower,
   Sparkles,
 } from "lucide-react";
@@ -53,9 +51,10 @@ const NAV_LINKS = [
 ];
 
 export function DashboardLayout() {
-  const orgRepository = getOrgRepository();
-  const { user, setAuth, logout } = useAuthStore();
-  const [users, setUsers] = React.useState<Employee[]>([]);
+  const { user, logout } = useAuthStore();
+  const [assetHealthPercent, setAssetHealthPercent] = React.useState<
+    number | null
+  >(null);
   const location = useLocation();
   const navigate = useNavigate();
   const [isDark, setIsDark] = React.useState(
@@ -63,22 +62,17 @@ export function DashboardLayout() {
   );
 
   React.useEffect(() => {
-    async function loadUsers() {
+    async function loadDashboardHealth() {
       try {
-        const data = await orgRepository.listEmployees();
-        setUsers(data);
+        const response = await api.get("/dashboard");
+        setAssetHealthPercent(response.data.data.kpis.assetHealthPercent);
       } catch (error) {
-        console.error("Failed to load users for role switch", error);
+        console.error("Failed to load dashboard health", error);
       }
     }
 
-    loadUsers();
-  }, [orgRepository]);
-
-  // This replaces the traditional login screen for testing purposes
-  const handleRoleSwitch = (newUser: Employee) => {
-    setAuth(newUser, "mock-jwt-token");
-  };
+    loadDashboardHealth();
+  }, []);
 
   const toggleTheme = () => {
     const nextDark = !isDark;
@@ -128,7 +122,7 @@ export function DashboardLayout() {
             </div>
           </div>
 
-          <div className="mt-5 grid grid-cols-3 gap-2">
+          <div className="mt-5 grid grid-cols-2 gap-2">
             <Button
               variant="outline"
               size="icon"
@@ -140,26 +134,6 @@ export function DashboardLayout() {
             <Button variant="outline" size="icon" title="Notifications">
               <Bell className="size-4" />
             </Button>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="icon" title="Switch role">
-                  <ChevronDown className="size-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56">
-                <DropdownMenuLabel className="text-xs text-muted-foreground uppercase">
-                  Switch Dev Role
-                </DropdownMenuLabel>
-                {users.map((u) => (
-                  <DropdownMenuItem
-                    key={u.id}
-                    onClick={() => handleRoleSwitch(u)}
-                  >
-                    {u.name} ({u.role})
-                  </DropdownMenuItem>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
           </div>
 
           <nav className="mt-6 flex flex-1 flex-col gap-1 overflow-y-auto border-t border-white/40 pt-5 dark:border-white/10">
@@ -196,12 +170,16 @@ export function DashboardLayout() {
             <div className="space-y-3 text-sm">
               <div className="flex items-center justify-between">
                 <span className="text-muted-foreground">Asset health</span>
-                <span className="font-semibold text-secondary">98%</span>
+                <span className="font-semibold text-secondary">
+                  {assetHealthPercent === null
+                    ? "Loading"
+                    : `${assetHealthPercent}%`}
+                </span>
               </div>
               <div className="h-2 overflow-hidden rounded-full bg-white/50 dark:bg-white/10">
                 <div
                   className="h-full rounded-full bg-secondary"
-                  style={{ width: "98%" }}
+                  style={{ width: `${assetHealthPercent ?? 0}%` }}
                 />
               </div>
               <p className="text-xs leading-5 text-muted-foreground">
@@ -260,18 +238,6 @@ export function DashboardLayout() {
                       </p>
                     </div>
                   </DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuLabel className="text-xs text-muted-foreground uppercase">
-                    Switch Dev Role
-                  </DropdownMenuLabel>
-                  {users.map((u) => (
-                    <DropdownMenuItem
-                      key={u.id}
-                      onClick={() => handleRoleSwitch(u)}
-                    >
-                      {u.name} ({u.role})
-                    </DropdownMenuItem>
-                  ))}
                   <DropdownMenuSeparator />
                   <DropdownMenuItem
                     onClick={() => {

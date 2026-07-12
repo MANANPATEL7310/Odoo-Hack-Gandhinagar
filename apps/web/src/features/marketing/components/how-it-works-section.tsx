@@ -11,7 +11,7 @@ import { Animate } from "@/components/ui/animate";
 const steps = [
   {
     icon: Settings,
-    step: "01",
+    label: "Setup",
     title: "Admin bootstraps the org",
     description:
       "Create departments with optional hierarchy, define asset categories with custom field schemas, and promote trusted employees to Asset Manager or Department Head.",
@@ -22,10 +22,10 @@ const steps = [
   },
   {
     icon: PackagePlus,
-    step: "02",
+    label: "Register",
     title: "Asset Manager registers assets",
     description:
-      "Every physical asset is registered with a serial number, condition, location, and category. The system auto-generates a sequential Asset Tag (AF-0001). Initial status: Available.",
+      "Every physical asset is registered with a serial number, condition, location, and category. The system generates the asset tag and keeps the current status in the database.",
     color: "text-secondary",
     ring: "ring-secondary/30",
     bg: "bg-secondary/10",
@@ -33,10 +33,10 @@ const steps = [
   },
   {
     icon: ArrowLeftRight,
-    step: "03",
+    label: "Assign",
     title: "Allocate or Book resources",
     description:
-      "Assets are allocated to employees or departments. Shared resources are booked by time slot. Conflicts are rejected at both service and database level — zero race conditions.",
+      "Assets are allocated to employees or departments. Shared resources are booked by time slot, with conflicts rejected at both service and database level.",
     color: "text-primary",
     ring: "ring-primary/30",
     bg: "bg-primary/10",
@@ -44,7 +44,7 @@ const steps = [
   },
   {
     icon: Wrench,
-    step: "04",
+    label: "Maintain",
     title: "Maintenance requests flow through approval",
     description:
       "Employees raise maintenance requests. Asset Manager approves or rejects. On approval, the asset flips to Under Maintenance. On resolution, prior custody is correctly restored.",
@@ -55,7 +55,7 @@ const steps = [
   },
   {
     icon: ClipboardCheck,
-    step: "05",
+    label: "Audit",
     title: "Audit cycles verify and report",
     description:
       "Admin or Asset Manager creates a cycle with scoped assets and assigned auditors. Auditors mark items Verified, Missing, or Damaged. On close, a discrepancy report is auto-generated.",
@@ -66,7 +66,7 @@ const steps = [
   },
   {
     icon: LayoutDashboard,
-    step: "06",
+    label: "Monitor",
     title: "Dashboard keeps everyone informed",
     description:
       "Every role sees a real-time, scoped KPI view — overdue items, pending transfers, active bookings. Notifications fire on every state change. No manual follow-up needed.",
@@ -90,7 +90,7 @@ export function HowItWorksSection() {
             How It Works
           </span>
           <h2 className="mt-3 text-3xl font-bold tracking-tight text-foreground md:text-4xl">
-            From zero to fully tracked in 6 steps
+            From setup to fully tracked operations
           </h2>
           <p className="mx-auto mt-4 max-w-2xl text-base text-muted-foreground">
             AssetFlow mirrors the real-world workflow your organization already
@@ -111,12 +111,12 @@ export function HowItWorksSection() {
         <div className="flex flex-col gap-8">
           {steps.map(
             (
-              { icon: Icon, step, title, description, color, ring, bg, glow },
+              { icon: Icon, label, title, description, color, ring, bg, glow },
               i,
             ) => {
               const isEven = i % 2 === 0;
               return (
-                <Animate key={step} variant="slide-up" delayMs={i * 80}>
+                <Animate key={label} variant="slide-up" delayMs={i * 80}>
                   <div
                     className={`flex flex-col items-center gap-6 lg:flex-row ${
                       isEven ? "lg:flex-row" : "lg:flex-row-reverse"
@@ -134,7 +134,7 @@ export function HowItWorksSection() {
                             <Icon className="size-5" />
                           </div>
                           <span className="text-sm font-semibold text-muted-foreground">
-                            Step {step}
+                            {label}
                           </span>
                         </div>
                         <div>
@@ -153,7 +153,7 @@ export function HowItWorksSection() {
                       <div
                         className={`flex size-12 items-center justify-center rounded-full border-2 bg-surface text-sm font-bold ring-4 ${color} ${ring}`}
                       >
-                        {step}
+                        <Icon className="size-5" />
                       </div>
                     </div>
 

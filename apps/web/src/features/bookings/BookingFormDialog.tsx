@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { Button } from "../../components/ui/button";
-import { Input } from "../../components/ui/input";
 import { Label } from "../../components/ui/label";
 import {
   Select,
@@ -17,7 +16,6 @@ interface BookingFormDialogProps {
   isOpen: boolean;
   onClose: () => void;
   assets: { id: string; name: string }[];
-  employees: { id: string; name: string }[];
   onSubmit: (payload: CreateBookingInput) => Promise<void>;
 }
 
@@ -25,14 +23,11 @@ export function BookingFormDialog({
   isOpen,
   onClose,
   assets,
-  employees,
   onSubmit,
 }: BookingFormDialogProps) {
   const [assetId, setAssetId] = useState("");
-  const [employeeId, setEmployeeId] = useState("");
   const [startTime, setStartTime] = useState("");
   const [endTime, setEndTime] = useState("");
-  const [purpose, setPurpose] = useState("");
 
   if (!isOpen) return null;
 
@@ -56,7 +51,6 @@ export function BookingFormDialog({
             e.preventDefault();
             await onSubmit({
               resourceAssetId: assetId,
-              bookedByEmployeeId: employeeId,
               startTime,
               endTime,
             });
@@ -73,22 +67,6 @@ export function BookingFormDialog({
                 {assets.map((a) => (
                   <SelectItem key={a.id} value={a.id}>
                     {a.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="space-y-2">
-            <Label>Booked For</Label>
-            <Select value={employeeId} onValueChange={setEmployeeId} required>
-              <SelectTrigger>
-                <SelectValue placeholder="Select employee..." />
-              </SelectTrigger>
-              <SelectContent>
-                {employees.map((e) => (
-                  <SelectItem key={e.id} value={e.id}>
-                    {e.name}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -114,16 +92,6 @@ export function BookingFormDialog({
                 required
               />
             </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label>Purpose</Label>
-            <Input
-              value={purpose}
-              onChange={(e) => setPurpose(e.target.value)}
-              placeholder="e.g. Client presentation"
-              required
-            />
           </div>
 
           <div className="mt-6 flex justify-end gap-3">

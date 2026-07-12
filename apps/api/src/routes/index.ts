@@ -2,6 +2,7 @@ import { Router } from "express";
 import { authRouter } from "../modules/auth/auth.routes.js";
 import { dashboardRouter } from "../modules/dashboard/dashboard.routes.js";
 import { healthRouter } from "../modules/health/health.routes.js";
+import { publicMetricsRouter } from "../modules/public-metrics/public-metrics.routes.js";
 import { uploadRouter } from "../modules/upload/upload.routes.js";
 import { departmentsRouter } from "../modules/departments/departments.routes.js";
 import { assetCategoriesRouter } from "../modules/asset-categories/asset-categories.routes.js";
@@ -22,6 +23,7 @@ import { reportsRouter } from "../modules/reports/reports.routes.js";
 export const apiRouter = Router();
 
 apiRouter.use("/health", healthRouter);
+apiRouter.use("/public-metrics", publicMetricsRouter);
 apiRouter.use("/auth", authRouter);
 apiRouter.use("/dashboard", dashboardRouter);
 apiRouter.use("/uploads", uploadRouter);

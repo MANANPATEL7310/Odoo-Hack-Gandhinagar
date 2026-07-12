@@ -5,7 +5,7 @@ const envSchema = z.object({
   VITE_API_URL: z.string().url(),
   VITE_USE_MOCK_DATA: z
     .enum(["true", "false"])
-    .default("true")
+    .default("false")
     .transform((value) => value === "true"),
 });
 

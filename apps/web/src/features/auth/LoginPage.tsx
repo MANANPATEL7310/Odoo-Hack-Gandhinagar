@@ -6,14 +6,14 @@ import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
 import { Label } from "../../components/ui/label";
 import { LogoMark } from "../../components/shared/logo-mark";
-import { ArrowRight, Boxes, Fingerprint, ShieldCheck } from "lucide-react";
+import { ArrowRight, Fingerprint, ShieldCheck } from "lucide-react";
 
 export function LoginPage() {
   const navigate = useNavigate();
   const setAuth = useAuthStore((state) => state.setAuth);
 
-  const [email, setEmail] = useState("alice@acme.com"); // default for testing
-  const [password, setPassword] = useState("password123");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -59,21 +59,6 @@ export function LoginPage() {
               close to the teams that need them.
             </p>
           </div>
-          <div className="grid grid-cols-3 gap-3">
-            {[
-              ["3", "Assets live"],
-              ["0", "Overdue"],
-              ["98%", "Health"],
-            ].map(([value, label]) => (
-              <div
-                key={label}
-                className="rounded-lg border border-white/50 bg-white/35 p-4 dark:border-white/10 dark:bg-white/5"
-              >
-                <p className="text-2xl font-semibold">{value}</p>
-                <p className="mt-1 text-xs text-muted-foreground">{label}</p>
-              </div>
-            ))}
-          </div>
         </section>
 
         <section className="flex items-center justify-center p-5 sm:p-8">
@@ -102,7 +87,7 @@ export function LoginPage() {
                 <Input
                   id="email"
                   type="email"
-                  placeholder="alice@acme.com"
+                  placeholder="name@company.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
@@ -147,17 +132,6 @@ export function LoginPage() {
               <Link to="/signup" className="font-medium text-primary">
                 Sign up
               </Link>
-            </div>
-
-            <div className="mt-6 rounded-lg border border-white/50 bg-white/35 p-4 text-sm text-muted-foreground dark:border-white/10 dark:bg-white/5">
-              <div className="mb-2 flex items-center gap-2 font-medium text-foreground">
-                <Boxes className="size-4 text-primary" />
-                Demo access
-              </div>
-              <p className="font-mono text-xs">alice@acme.com / password123</p>
-              <p className="mt-1 font-mono text-xs">
-                bob@acme.com / password123
-              </p>
             </div>
           </div>
         </section>

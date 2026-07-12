@@ -2,6 +2,7 @@ node_modules
 dist
 build
 .turbo
+.pnpm-store/
 .DS_Store
 coverage
 *.log

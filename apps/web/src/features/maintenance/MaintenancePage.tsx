@@ -2,13 +2,8 @@ import { useEffect, useState } from "react";
 import {
   getMaintenanceRepository,
   getAssetsRepository,
-  getOrgRepository,
 } from "@/services/data/repositories";
-import type {
-  MaintenanceRequest,
-  Asset,
-  Employee,
-} from "@/services/data/types/domain";
+import type { MaintenanceRequest, Asset } from "@/services/data/types/domain";
 import { Button } from "../../components/ui/button";
 import {
   Table,
@@ -27,26 +22,17 @@ export function MaintenancePage() {
     MaintenanceRequest[]
   >([]);
   const [assets, setAssets] = useState<Asset[]>([]);
-  const [employees, setEmployees] = useState<Employee[]>([]);
   const [isFormOpen, setIsFormOpen] = useState(false);
 
   useEffect(() => {
     async function loadData() {
       try {
-        const [reqsData, assetsData, employeesData] = await Promise.all([
-          getMaintenanceRepository()
-            .listMaintenanceRequests()
-            .catch(() => []),
-          getAssetsRepository()
-            .listAssets()
-            .catch(() => []),
-          getOrgRepository()
-            .listEmployees()
-            .catch(() => []),
+        const [reqsData, assetsData] = await Promise.all([
+          getMaintenanceRepository().listMaintenanceRequests(),
+          getAssetsRepository().listAssets(),
         ]);
         setMaintenanceRequests(reqsData);
         setAssets(assetsData);
-        setEmployees(employeesData);
       } catch (err) {
         console.error(err);
       }
@@ -55,9 +41,7 @@ export function MaintenancePage() {
   }, []);
 
   const refreshData = async () => {
-    const data = await getMaintenanceRepository()
-      .listMaintenanceRequests()
-      .catch(() => []);
+    const data = await getMaintenanceRepository().listMaintenanceRequests();
     setMaintenanceRequests(data);
   };
 
@@ -67,7 +51,6 @@ export function MaintenancePage() {
         isOpen={isFormOpen}
         onClose={() => setIsFormOpen(false)}
         assets={assets}
-        employees={employees}
         onSubmit={async (payload) => {
           try {
             await getMaintenanceRepository().createMaintenanceRequest(payload);
@@ -101,18 +84,19 @@ export function MaintenancePage() {
               <TableRow>
                 <TableHead>Asset</TableHead>
                 <TableHead>Reported By</TableHead>
+                <TableHead>Priority</TableHead>
                 <TableHead>Issue</TableHead>
-                <TableHead>Cost</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {maintenanceRequests.map((mr) => {
-                const asset = assets.find((x) => x.id === mr.assetId);
-                const userName =
-                  employees.find((e) => e.id === mr.reportedByEmployeeId)
-                    ?.name || "Unknown";
+                const assetName =
+                  mr.asset?.name ||
+                  assets.find((asset) => asset.id === mr.assetId)?.name ||
+                  "Unknown";
+                const reporterName = mr.raisedBy?.name || "Unknown";
 
                 let badgeVariant: "default" | "success" | "warning" = "default";
                 if (mr.status === "PENDING") badgeVariant = "default";
@@ -121,12 +105,12 @@ export function MaintenancePage() {
 
                 return (
                   <TableRow key={mr.id}>
-                    <TableCell className="font-medium">{asset?.name}</TableCell>
-                    <TableCell>{userName}</TableCell>
+                    <TableCell className="font-medium">{assetName}</TableCell>
+                    <TableCell>{reporterName}</TableCell>
+                    <TableCell>{mr.priority.replace("_", " ")}</TableCell>
                     <TableCell className="max-w-xs truncate">
                       {mr.issueDescription}
                     </TableCell>
-                    <TableCell>N/A</TableCell>
                     <TableCell>
                       <Badge variant={badgeVariant}>
                         {mr.status.replace("_", " ")}

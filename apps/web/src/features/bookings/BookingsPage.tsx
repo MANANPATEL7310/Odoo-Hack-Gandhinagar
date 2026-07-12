@@ -28,15 +28,9 @@ export function BookingsPage() {
     async function loadData() {
       try {
         const [bookingsData, assetsData, employeesData] = await Promise.all([
-          getBookingsRepository()
-            .listBookings()
-            .catch(() => []),
-          getAssetsRepository()
-            .listAssets()
-            .catch(() => []),
-          getOrgRepository()
-            .listEmployees()
-            .catch(() => []),
+          getBookingsRepository().listBookings(),
+          getAssetsRepository().listAssets(),
+          getOrgRepository().listEmployees(),
         ]);
         setBookings(bookingsData);
         setAssets(assetsData);
@@ -49,9 +43,7 @@ export function BookingsPage() {
   }, []);
 
   const refreshData = async () => {
-    const data = await getBookingsRepository()
-      .listBookings()
-      .catch(() => []);
+    const data = await getBookingsRepository().listBookings();
     setBookings(data);
   };
 
@@ -63,7 +55,6 @@ export function BookingsPage() {
         isOpen={isFormOpen}
         onClose={() => setIsFormOpen(false)}
         assets={bookableAssets}
-        employees={employees}
         onSubmit={async (payload) => {
           try {
             await getBookingsRepository().createBooking(payload);
@@ -106,9 +97,16 @@ export function BookingsPage() {
             </TableHeader>
             <TableBody>
               {bookings.map((b) => {
-                const asset = assets.find((x) => x.id === b.resourceAssetId);
+                const assetName =
+                  b.resourceAsset?.name ||
+                  assets.find((asset) => asset.id === b.resourceAssetId)
+                    ?.name ||
+                  "Unknown";
                 const userName =
-                  employees.find((e) => e.id === b.bookedByEmployeeId)?.name ||
+                  b.bookedBy?.name ||
+                  employees.find(
+                    (employee) => employee.id === b.bookedByEmployeeId,
+                  )?.name ||
                   "Unknown";
 
                 let badgeVariant:
@@ -123,7 +121,7 @@ export function BookingsPage() {
 
                 return (
                   <TableRow key={b.id}>
-                    <TableCell className="font-medium">{asset?.name}</TableCell>
+                    <TableCell className="font-medium">{assetName}</TableCell>
                     <TableCell>{userName}</TableCell>
                     <TableCell>
                       {new Date(b.startTime).toLocaleString()}

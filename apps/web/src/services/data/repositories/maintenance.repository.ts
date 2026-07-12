@@ -1,9 +1,13 @@
-import type { MaintenanceRequest } from "../types/domain";
+import type {
+  CreateMaintenanceRequestInput,
+  MaintenanceRequest,
+} from "../types/domain";
 
 export interface MaintenanceRepository {
   listMaintenanceRequests(): Promise<MaintenanceRequest[]>;
   createMaintenanceRequest(
-    payload: Omit<MaintenanceRequest, "id" | "status">,
+    payload: CreateMaintenanceRequestInput,
   ): Promise<MaintenanceRequest>;
-  resolveMaintenanceRequest(id: string): Promise<MaintenanceRequest>;
+  startWork(id: string): Promise<MaintenanceRequest>;
+  resolveIssue(id: string): Promise<MaintenanceRequest>;
 }

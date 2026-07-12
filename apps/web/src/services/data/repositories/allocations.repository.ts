@@ -14,7 +14,10 @@ export interface AllocationsRepository {
   listEmployees(): Promise<Employee[]>;
   listDepartments(): Promise<Department[]>;
   createAllocation(payload: CreateAllocationInput): Promise<Allocation>;
-  returnAllocation(allocationId: string): Promise<Allocation>;
+  returnAllocation(
+    allocationId: string,
+    conditionAtReturn: string,
+  ): Promise<Allocation>;
   approveTransferRequest(transferRequestId: string): Promise<TransferRequest>;
   rejectTransferRequest(transferRequestId: string): Promise<TransferRequest>;
 }

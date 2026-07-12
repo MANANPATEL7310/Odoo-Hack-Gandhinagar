@@ -327,19 +327,29 @@ export async function startMaintenance(
 
   // Approve allows direct start or technician assignment start
   if (
+    request.status !== MaintenanceStatus.PENDING &&
     request.status !== MaintenanceStatus.APPROVED &&
     request.status !== MaintenanceStatus.TECHNICIAN_ASSIGNED
   ) {
     throw new BadRequestError(
-      "Maintenance can only start for approved or technician-assigned requests.",
+      "Maintenance can only start for pending, approved, or technician-assigned requests.",
     );
   }
 
-  const updated = await db.maintenanceRequest.update({
-    where: { id },
-    data: {
-      status: MaintenanceStatus.IN_PROGRESS,
-    },
+  const updated = await db.$transaction(async (tx) => {
+    const req = await tx.maintenanceRequest.update({
+      where: { id },
+      data: {
+        status: MaintenanceStatus.IN_PROGRESS,
+      },
+    });
+
+    await tx.asset.update({
+      where: { id: request.assetId },
+      data: { status: AssetStatus.UNDER_MAINTENANCE },
+    });
+
+    return req;
   });
 
   return db.maintenanceRequest.findUnique({

@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { Button } from "../../components/ui/button";
-import { Input } from "../../components/ui/input";
 import { Label } from "../../components/ui/label";
 import {
   Select,
@@ -12,13 +11,15 @@ import {
 import { Textarea } from "../../components/ui/textarea";
 import { X } from "lucide-react";
 
-import type { CreateMaintenanceRequestInput } from "@/services/data/types/domain";
+import type {
+  CreateMaintenanceRequestInput,
+  MaintenancePriority,
+} from "@/services/data/types/domain";
 
 interface MaintenanceFormDialogProps {
   isOpen: boolean;
   onClose: () => void;
   assets: { id: string; name: string }[];
-  employees: { id: string; name: string }[];
   onSubmit: (payload: CreateMaintenanceRequestInput) => Promise<void>;
 }
 
@@ -26,13 +27,11 @@ export function MaintenanceFormDialog({
   isOpen,
   onClose,
   assets,
-  employees,
   onSubmit,
 }: MaintenanceFormDialogProps) {
   const [assetId, setAssetId] = useState("");
-  const [employeeId, setEmployeeId] = useState("");
   const [description, setDescription] = useState("");
-  const [estimatedCost, setEstimatedCost] = useState("");
+  const [priority, setPriority] = useState<MaintenancePriority | "">("");
 
   if (!isOpen) return null;
 
@@ -56,9 +55,8 @@ export function MaintenanceFormDialog({
             e.preventDefault();
             await onSubmit({
               assetId,
-              reportedByEmployeeId: employeeId,
               issueDescription: description,
-              priority: "MEDIUM",
+              priority: priority as MaintenancePriority,
             });
             onClose();
           }}
@@ -80,22 +78,6 @@ export function MaintenanceFormDialog({
           </div>
 
           <div className="space-y-2">
-            <Label>Reported By (Employee)</Label>
-            <Select value={employeeId} onValueChange={setEmployeeId} required>
-              <SelectTrigger>
-                <SelectValue placeholder="Select employee..." />
-              </SelectTrigger>
-              <SelectContent>
-                {employees.map((e) => (
-                  <SelectItem key={e.id} value={e.id}>
-                    {e.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="space-y-2">
             <Label>Description of Issue</Label>
             <Textarea
               value={description}
@@ -106,13 +88,24 @@ export function MaintenanceFormDialog({
           </div>
 
           <div className="space-y-2">
-            <Label>Estimated Cost ($)</Label>
-            <Input
-              type="number"
-              value={estimatedCost}
-              onChange={(e) => setEstimatedCost(e.target.value)}
-              placeholder="0.00"
-            />
+            <Label>Priority</Label>
+            <Select
+              value={priority}
+              onValueChange={(value) =>
+                setPriority(value as MaintenancePriority)
+              }
+              required
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select priority..." />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="LOW">Low</SelectItem>
+                <SelectItem value="MEDIUM">Medium</SelectItem>
+                <SelectItem value="HIGH">High</SelectItem>
+                <SelectItem value="CRITICAL">Critical</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="mt-6 flex justify-end gap-3">

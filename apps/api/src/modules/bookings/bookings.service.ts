@@ -231,6 +231,137 @@ export async function cancelBooking(
   });
 }
 
+async function canManageBooking(
+  booking: { bookedByEmployeeId: string },
+  currentUser: { id: string; role: Role },
+) {
+  if (
+    currentUser.role === Role.ADMIN ||
+    currentUser.role === Role.ASSET_MANAGER
+  ) {
+    return true;
+  }
+
+  if (booking.bookedByEmployeeId === currentUser.id) {
+    return true;
+  }
+
+  if (currentUser.role === Role.DEPARTMENT_HEAD) {
+    const [head, creator] = await Promise.all([
+      db.employee.findUnique({
+        where: { id: currentUser.id },
+        select: { departmentId: true },
+      }),
+      db.employee.findUnique({
+        where: { id: booking.bookedByEmployeeId },
+        select: { departmentId: true },
+      }),
+    ]);
+
+    return Boolean(
+      head?.departmentId &&
+      creator?.departmentId &&
+      head.departmentId === creator.departmentId,
+    );
+  }
+
+  return false;
+}
+
+export async function startBooking(
+  id: string,
+  currentUser: { id: string; role: Role },
+) {
+  const booking = await db.booking.findUnique({
+    where: { id },
+    include: {
+      resourceAsset: true,
+    },
+  });
+
+  if (!booking) {
+    throw new NotFoundError("Booking not found.");
+  }
+
+  if (booking.status !== BookingStatus.UPCOMING) {
+    throw new BadRequestError(
+      `Only upcoming bookings can be started. Current status: ${booking.status}`,
+    );
+  }
+
+  if (!(await canManageBooking(booking, currentUser))) {
+    throw new ForbiddenError(
+      "You do not have permission to start this booking.",
+    );
+  }
+
+  const updated = await db.booking.update({
+    where: { id },
+    data: { status: BookingStatus.ONGOING },
+  });
+
+  eventBus.publish("booking:started", {
+    bookingId: booking.id,
+    assetId: booking.resourceAssetId,
+    actorId: currentUser.id,
+  });
+
+  return db.booking.findUnique({
+    where: { id: updated.id },
+    include: {
+      resourceAsset: true,
+      bookedBy: { select: { id: true, name: true, email: true } },
+    },
+  });
+}
+
+export async function completeBooking(
+  id: string,
+  currentUser: { id: string; role: Role },
+) {
+  const booking = await db.booking.findUnique({
+    where: { id },
+    include: {
+      resourceAsset: true,
+    },
+  });
+
+  if (!booking) {
+    throw new NotFoundError("Booking not found.");
+  }
+
+  if (booking.status !== BookingStatus.ONGOING) {
+    throw new BadRequestError(
+      `Only ongoing bookings can be completed. Current status: ${booking.status}`,
+    );
+  }
+
+  if (!(await canManageBooking(booking, currentUser))) {
+    throw new ForbiddenError(
+      "You do not have permission to complete this booking.",
+    );
+  }
+
+  const updated = await db.booking.update({
+    where: { id },
+    data: { status: BookingStatus.COMPLETED },
+  });
+
+  eventBus.publish("booking:completed", {
+    bookingId: booking.id,
+    assetId: booking.resourceAssetId,
+    actorId: currentUser.id,
+  });
+
+  return db.booking.findUnique({
+    where: { id: updated.id },
+    include: {
+      resourceAsset: true,
+      bookedBy: { select: { id: true, name: true, email: true } },
+    },
+  });
+}
+
 export async function rescheduleBooking(
   id: string,
   input: RescheduleBookingInput,

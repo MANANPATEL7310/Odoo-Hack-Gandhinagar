@@ -19,7 +19,6 @@ import {
   Archive,
   Boxes,
   CheckCircle2,
-  Filter,
   Laptop,
   Plus,
   Search,
@@ -151,9 +150,15 @@ export function AssetRegistryPage() {
     return Tag;
   };
 
-  const handleRowClick = (asset: Asset) => {
-    setSelectedAsset(asset);
+  const handleRowClick = async (asset: Asset) => {
     setIsDrawerOpen(true);
+    setSelectedAsset(asset);
+    try {
+      const detail = await assetsRepository.getAsset(asset.id);
+      setSelectedAsset(detail);
+    } catch (error) {
+      console.error("Failed to load asset detail", error);
+    }
   };
 
   return (
@@ -164,7 +169,9 @@ export function AssetRegistryPage() {
         onClose={() => setIsDrawerOpen(false)}
         categoryName={
           selectedAsset
-            ? categoryById[selectedAsset.categoryId] || "Unknown"
+            ? selectedAsset.category?.name ||
+              categoryById[selectedAsset.categoryId] ||
+              "Unknown"
             : ""
         }
       />
@@ -244,10 +251,6 @@ export function AssetRegistryPage() {
                 <SelectItem value="Retired">Retired</SelectItem>
               </SelectContent>
             </Select>
-            <Button variant="outline" className="justify-center">
-              <Filter className="size-4" />
-              <span>Filters</span>
-            </Button>
           </div>
         </div>
 

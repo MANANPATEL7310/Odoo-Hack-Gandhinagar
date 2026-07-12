@@ -1,4 +1,9 @@
 import { apiClient } from "@/services/http/api-client";
+import {
+  unwrapList,
+  type ApiSuccess,
+  type PaginatedData,
+} from "@/services/http/api-response";
 import type { BookingsRepository } from "@/services/data/repositories/bookings.repository";
 import type {
   Asset,
@@ -7,20 +12,22 @@ import type {
   Employee,
 } from "@/services/data/types/domain";
 
-type ApiSuccess<T> = {
-  success: true;
-  data: T;
-};
-
 export const apiBookingsRepository: BookingsRepository = {
   async listBookings() {
-    const response = await apiClient.get<ApiSuccess<Booking[]>>("/bookings");
-    return response.data.data;
+    const response =
+      await apiClient.get<ApiSuccess<Booking[] | PaginatedData<Booking>>>(
+        "/bookings",
+      );
+    return unwrapList(response.data.data);
   },
 
   async listAssets() {
-    const response = await apiClient.get<ApiSuccess<Asset[]>>("/assets");
-    return response.data.data;
+    const response = await apiClient.get<
+      ApiSuccess<Asset[] | PaginatedData<Asset>>
+    >("/assets", {
+      params: { pageSize: 1000 },
+    });
+    return unwrapList(response.data.data);
   },
 
   async listEmployees() {

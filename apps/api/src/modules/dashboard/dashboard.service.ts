@@ -2,10 +2,11 @@ import { db } from "../../lib/db.js";
 import {
   Role,
   AssetStatus,
-  AuditStatus,
+  BookingStatus,
   MaintenanceStatus,
   TransferStatus,
   Prisma,
+  AllocationStatus,
 } from "@prisma/client";
 
 export async function getDashboardData(currentUser: {
@@ -22,28 +23,51 @@ export async function getDashboardData(currentUser: {
     currentUser.role === Role.ASSET_MANAGER
   ) {
     const [
-      _totalAssets,
+      totalAssets,
       allocatedAssets,
       availableAssets,
-      maintenanceAssets,
+      assetsUnderMaintenance,
+      activeMaintenanceRequests,
+      activeBookings,
       pendingTransfers,
-      openAudits,
+      upcomingReturns,
     ] = await Promise.all([
       db.asset.count(),
       db.asset.count({ where: { status: AssetStatus.ALLOCATED } }),
       db.asset.count({ where: { status: AssetStatus.AVAILABLE } }),
       db.asset.count({ where: { status: AssetStatus.UNDER_MAINTENANCE } }),
+      db.maintenanceRequest.count({
+        where: {
+          status: {
+            in: [
+              MaintenanceStatus.PENDING,
+              MaintenanceStatus.APPROVED,
+              MaintenanceStatus.TECHNICIAN_ASSIGNED,
+              MaintenanceStatus.IN_PROGRESS,
+            ],
+          },
+        },
+      }),
+      db.booking.count({ where: { status: BookingStatus.ONGOING } }),
       db.transferRequest.count({ where: { status: TransferStatus.REQUESTED } }),
-      db.auditCycle.count({ where: { status: AuditStatus.OPEN } }),
+      db.allocation.count({
+        where: {
+          status: AllocationStatus.ACTIVE,
+          returnedAt: null,
+          expectedReturnDate: { gte: now },
+        },
+      }),
     ]);
 
     kpis = {
+      totalAssets,
       assetsAvailable: availableAssets,
       assetsAllocated: allocatedAssets,
-      maintenanceToday: maintenanceAssets,
-      activeBookings: 0, // Would need a count of ONGOING bookings
+      assetsUnderMaintenance,
+      maintenanceToday: activeMaintenanceRequests,
+      activeBookings,
       pendingTransfers,
-      upcomingReturns: openAudits, // Repurpose until frontend is updated
+      upcomingReturns,
     };
   } else if (currentUser.role === Role.DEPARTMENT_HEAD) {
     // Get department ID
@@ -55,11 +79,20 @@ export async function getDashboardData(currentUser: {
 
     const [
       totalAssets,
+      assetsUnderMaintenance,
       activeAllocations,
       pendingTransfers,
       activeMaintenance,
+      activeBookings,
+      upcomingReturns,
     ] = await Promise.all([
       db.asset.count({ where: { locationDepartmentId: deptId } }),
+      db.asset.count({
+        where: {
+          locationDepartmentId: deptId,
+          status: AssetStatus.UNDER_MAINTENANCE,
+        },
+      }),
       db.allocation.count({
         where: {
           returnedAt: null,
@@ -91,15 +124,37 @@ export async function getDashboardData(currentUser: {
           asset: { locationDepartmentId: deptId },
         },
       }),
+      db.booking.count({
+        where: {
+          status: BookingStatus.ONGOING,
+          resourceAsset: { locationDepartmentId: deptId },
+        },
+      }),
+      db.allocation.count({
+        where: {
+          status: AllocationStatus.ACTIVE,
+          returnedAt: null,
+          expectedReturnDate: { gte: now },
+          OR: [
+            { holderDepartmentId: deptId },
+            { holderEmployee: { departmentId: deptId } },
+          ],
+        },
+      }),
     ]);
 
     kpis = {
-      assetsAvailable: totalAssets,
+      totalAssets,
+      assetsAvailable: Math.max(
+        0,
+        totalAssets - activeAllocations - assetsUnderMaintenance,
+      ),
       assetsAllocated: activeAllocations,
+      assetsUnderMaintenance,
       maintenanceToday: activeMaintenance,
-      activeBookings: 0,
+      activeBookings,
       pendingTransfers,
-      upcomingReturns: 0,
+      upcomingReturns,
     };
   } else {
     // Employee Role
@@ -107,6 +162,8 @@ export async function getDashboardData(currentUser: {
       activeAllocations,
       pendingTransfers,
       upcomingBookings,
+      activeBookings,
+      upcomingReturns,
       activeMaintenance,
     ] = await Promise.all([
       db.allocation.count({
@@ -128,6 +185,20 @@ export async function getDashboardData(currentUser: {
           startTime: { gt: now },
         },
       }),
+      db.booking.count({
+        where: {
+          bookedByEmployeeId: currentUser.id,
+          status: BookingStatus.ONGOING,
+        },
+      }),
+      db.allocation.count({
+        where: {
+          holderEmployeeId: currentUser.id,
+          status: AllocationStatus.ACTIVE,
+          returnedAt: null,
+          expectedReturnDate: { gte: now },
+        },
+      }),
       db.maintenanceRequest.count({
         where: {
           status: {
@@ -144,14 +215,25 @@ export async function getDashboardData(currentUser: {
     ]);
 
     kpis = {
+      totalAssets: activeAllocations,
       assetsAvailable: activeAllocations,
-      assetsAllocated: activeMaintenance,
+      assetsAllocated: activeAllocations,
+      assetsUnderMaintenance: activeMaintenance,
       maintenanceToday: activeMaintenance,
-      activeBookings: upcomingBookings,
+      activeBookings,
       pendingTransfers,
-      upcomingReturns: upcomingBookings,
+      upcomingReturns: upcomingReturns + upcomingBookings,
     };
   }
+
+  const totalAssets = kpis.totalAssets || 0;
+  const unhealthyAssets = Math.min(
+    kpis.assetsUnderMaintenance || 0,
+    totalAssets,
+  );
+  kpis.assetHealthPercent = totalAssets
+    ? Math.round(((totalAssets - unhealthyAssets) / totalAssets) * 100)
+    : 0;
 
   // 2. Fetch Overdue Allocations based on role scope
   const overdueWhere: Prisma.AllocationWhereInput = {
@@ -215,6 +297,7 @@ export async function getDashboardData(currentUser: {
   return {
     kpis,
     overdue,
-    upcoming,
+    upcomingReturns: upcoming,
+    upcomingBookings: upcoming,
   };
 }

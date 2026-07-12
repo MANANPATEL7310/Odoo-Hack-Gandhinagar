@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Download, TrendingUp, Package, Wrench } from "lucide-react";
 import { Button } from "../../components/ui/button";
 import {
@@ -13,11 +13,10 @@ import {
   Pie,
   Cell,
 } from "recharts";
-import {
-  getAssetsRepository,
-  getMaintenanceRepository,
-} from "@/services/data/repositories";
-import type { Asset, MaintenanceRequest } from "@/services/data/types/domain";
+import { getAssetsRepository } from "@/services/data/repositories";
+import { apiClient } from "@/services/http/api-client";
+import type { ApiSuccess } from "@/services/http/api-response";
+import type { Asset } from "@/services/data/types/domain";
 
 const COLORS = [
   "#6366f1",
@@ -28,24 +27,44 @@ const COLORS = [
   "#ec4899",
 ];
 
+interface MaintenanceFrequencyRow {
+  assetTag: string;
+  assetName: string;
+  totalRequests: number;
+  resolvedRequests: number;
+  avgResolutionHours: number;
+}
+
+interface UtilizationRow {
+  categoryId: string;
+  categoryName: string;
+  totalAssets: number;
+  allocatedAssets: number;
+  utilizationRate: number;
+}
+
 export function ReportsPage() {
   const [assets, setAssets] = useState<Asset[]>([]);
-  const [maintenance, setMaintenance] = useState<MaintenanceRequest[]>([]);
+  const [maintenanceRows, setMaintenanceRows] = useState<
+    MaintenanceFrequencyRow[]
+  >([]);
+  const [utilizationRows, setUtilizationRows] = useState<UtilizationRow[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function loadData() {
       try {
-        const [assetsData, maintenanceData] = await Promise.all([
-          getAssetsRepository()
-            .listAssets()
-            .catch(() => []),
-          getMaintenanceRepository()
-            .listMaintenanceRequests()
-            .catch(() => []),
-        ]);
+        const [assetsData, maintenanceResponse, utilizationResponse] =
+          await Promise.all([
+            getAssetsRepository().listAssets(),
+            apiClient.get<ApiSuccess<MaintenanceFrequencyRow[]>>(
+              "/reports/maintenance-frequency",
+            ),
+            apiClient.get<ApiSuccess<UtilizationRow[]>>("/reports/utilization"),
+          ]);
         setAssets(assetsData);
-        setMaintenance(maintenanceData);
+        setMaintenanceRows(maintenanceResponse.data.data);
+        setUtilizationRows(utilizationResponse.data.data);
       } catch (err) {
         console.error(err);
       } finally {
@@ -55,7 +74,10 @@ export function ReportsPage() {
     loadData();
   }, []);
 
-  const totalValue = assets.reduce((sum, a) => sum + (a.purchasePrice || 0), 0);
+  const totalValue = assets.reduce(
+    (sum, asset) => sum + (asset.acquisitionCost || 0),
+    0,
+  );
 
   const statusData = useMemo(() => {
     const counts = assets.reduce(
@@ -68,16 +90,46 @@ export function ReportsPage() {
     return Object.entries(counts).map(([name, value]) => ({ name, value }));
   }, [assets]);
 
-  const maintenanceData = useMemo(() => {
-    const counts = maintenance.reduce(
-      (acc, m) => {
-        acc[m.status] = (acc[m.status] || 0) + 1;
-        return acc;
-      },
-      {} as Record<string, number>,
-    );
-    return Object.entries(counts).map(([name, value]) => ({ name, value }));
-  }, [maintenance]);
+  const utilizationData = useMemo(
+    () =>
+      utilizationRows
+        .filter((row) => row.totalAssets > 0)
+        .map((row) => ({
+          name: row.categoryName,
+          value: row.utilizationRate,
+          allocatedAssets: row.allocatedAssets,
+          totalAssets: row.totalAssets,
+        })),
+    [utilizationRows],
+  );
+
+  const maintenanceData = useMemo(
+    () =>
+      maintenanceRows.map((row) => ({
+        name: row.assetTag,
+        value: row.totalRequests,
+        assetName: row.assetName,
+        resolvedRequests: row.resolvedRequests,
+      })),
+    [maintenanceRows],
+  );
+
+  const totalMaintenanceRequests = maintenanceRows.reduce(
+    (sum, row) => sum + row.totalRequests,
+    0,
+  );
+
+  const handleExport = async () => {
+    const response = await apiClient.get<Blob>("/reports/utilization/export", {
+      responseType: "blob",
+    });
+    const url = URL.createObjectURL(response.data);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "utilization_report.csv";
+    link.click();
+    URL.revokeObjectURL(url);
+  };
 
   if (loading) {
     return (
@@ -99,9 +151,9 @@ export function ReportsPage() {
             maintenance costs.
           </p>
         </div>
-        <Button className="shadow-lg shadow-primary/20">
+        <Button className="shadow-lg shadow-primary/20" onClick={handleExport}>
           <Download className="mr-2 size-4" />
-          Export All Data
+          Export Utilization
         </Button>
       </div>
 
@@ -145,7 +197,7 @@ export function ReportsPage() {
             </div>
             <h3 className="font-semibold">Maintenance Issues</h3>
           </div>
-          <p className="text-3xl font-bold">{maintenance.length}</p>
+          <p className="text-3xl font-bold">{totalMaintenanceRequests}</p>
           <p className="mt-2 text-sm text-muted-foreground">
             Total reported issues
           </p>
@@ -169,7 +221,7 @@ export function ReportsPage() {
                     paddingAngle={5}
                     dataKey="value"
                     label={({ name, percent }) =>
-                      `${name} ${(percent * 100).toFixed(0)}%`
+                      `${name} ${((percent ?? 0) * 100).toFixed(0)}%`
                     }
                   >
                     {statusData.map((entry, index) => (
@@ -191,7 +243,7 @@ export function ReportsPage() {
         </div>
 
         <div className="surface-card p-6">
-          <h3 className="mb-6 font-semibold">Maintenance Requests</h3>
+          <h3 className="mb-6 font-semibold">Maintenance Requests by Asset</h3>
           {maintenanceData.length > 0 ? (
             <div className="h-72 w-full">
               <ResponsiveContainer width="100%" height="100%">
@@ -238,6 +290,47 @@ export function ReportsPage() {
             </div>
           )}
         </div>
+      </div>
+      <div className="surface-card p-6">
+        <h3 className="mb-6 font-semibold">Utilization by Category</h3>
+        {utilizationData.length > 0 ? (
+          <div className="h-72 w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={utilizationData}>
+                <CartesianGrid
+                  strokeDasharray="3 3"
+                  vertical={false}
+                  opacity={0.2}
+                />
+                <XAxis dataKey="name" axisLine={false} tickLine={false} />
+                <YAxis
+                  allowDecimals={false}
+                  axisLine={false}
+                  tickLine={false}
+                />
+                <RechartsTooltip
+                  cursor={{ fill: "rgba(255, 255, 255, 0.05)" }}
+                  contentStyle={{
+                    backgroundColor: "rgba(15, 23, 42, 0.9)",
+                    border: "1px solid rgba(255, 255, 255, 0.1)",
+                    borderRadius: "8px",
+                    backdropFilter: "blur(12px)",
+                  }}
+                />
+                <Bar
+                  dataKey="value"
+                  fill="#10b981"
+                  radius={[4, 4, 0, 0]}
+                  maxBarSize={60}
+                />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        ) : (
+          <div className="flex h-72 items-center justify-center text-muted-foreground">
+            No data available
+          </div>
+        )}
       </div>
     </div>
   );

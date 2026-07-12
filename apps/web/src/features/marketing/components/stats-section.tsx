@@ -1,33 +1,41 @@
 import { Animate } from "@/components/ui/animate";
+import type { PublicMetrics } from "@/features/marketing/pages/home-page";
 
-const stats = [
-  {
-    value: "0",
-    unit: "",
-    label: "Double-Allocations Possible",
-    sub: "DB-level unique constraint on active allocations",
-  },
-  {
-    value: "7",
-    unit: "",
-    label: "Asset Lifecycle States",
-    sub: "Available · Allocated · Reserved · Under Maintenance · Lost · Retired · Disposed",
-  },
-  {
-    value: "4",
-    unit: "",
-    label: "Role-Gated Permission Tiers",
-    sub: "Admin · Asset Manager · Department Head · Employee",
-  },
-  {
-    value: "100%",
-    unit: "",
-    label: "Audit Trail Coverage",
-    sub: "Every state change logged — append-only, never editable",
-  },
-];
+interface StatsSectionProps {
+  metrics: PublicMetrics | null;
+}
 
-export function StatsSection() {
+const metricValue = (value: number | undefined, suffix = "") =>
+  value === undefined ? "..." : `${value}${suffix}`;
+
+export function StatsSection({ metrics }: StatsSectionProps) {
+  const stats = [
+    {
+      value: metricValue(metrics?.allocatedAssets),
+      unit: "",
+      label: "Active Allocations",
+      sub: "Currently assigned assets from the database",
+    },
+    {
+      value: metricValue(metrics?.activeEmployees),
+      unit: "",
+      label: "Active Employees",
+      sub: "Employee records available to workflows",
+    },
+    {
+      value: metricValue(metrics?.activeMaintenanceRequests),
+      unit: "",
+      label: "Open Maintenance",
+      sub: "Pending, approved, assigned, and in-progress requests",
+    },
+    {
+      value: metricValue(metrics?.activityLogCount),
+      unit: "",
+      label: "Audit Trail Events",
+      sub: "Append-only activity log records",
+    },
+  ];
+
   return (
     <section className="relative overflow-hidden py-20">
       {/* Background */}

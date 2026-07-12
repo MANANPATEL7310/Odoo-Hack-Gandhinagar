@@ -19,45 +19,160 @@ import {
 import { Badge } from "../../components/ui/badge";
 import { ClipboardCheck } from "lucide-react";
 import { Button } from "../../components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "../../components/ui/dialog";
+import { Label } from "../../components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../../components/ui/select";
+import { DatePicker } from "../../components/ui/date-picker";
 
 export function AuditsPage() {
   const [audits, setAudits] = useState<AuditCycle[]>([]);
   const [departments, setDepartments] = useState<Department[]>([]);
   const [employees, setEmployees] = useState<Employee[]>([]);
+  const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [scopeDepartmentId, setScopeDepartmentId] = useState("");
+  const [auditorEmployeeId, setAuditorEmployeeId] = useState("");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
 
   useEffect(() => {
-    async function loadData() {
+    const loadData = async () => {
       try {
-        const [auditsData, deptsData, employeesData] = await Promise.all([
-          getAuditsRepository()
-            .listAuditCycles()
-            .catch(() => []),
-          getOrgRepository()
-            .listDepartments()
-            .catch(() => []),
-          getOrgRepository()
-            .listEmployees()
-            .catch(() => []),
+        const [auditsData, departmentsData, employeesData] = await Promise.all([
+          getAuditsRepository().listAuditCycles(),
+          getOrgRepository().listDepartments(),
+          getOrgRepository().listEmployees(),
         ]);
         setAudits(auditsData);
-        setDepartments(deptsData);
+        setDepartments(departmentsData);
         setEmployees(employeesData);
       } catch (err) {
         console.error(err);
       }
-    }
+    };
+
     loadData();
   }, []);
 
   const refreshData = async () => {
-    const data = await getAuditsRepository()
-      .listAuditCycles()
-      .catch(() => []);
+    const data = await getAuditsRepository().listAuditCycles();
     setAudits(data);
+  };
+
+  const resetCreateForm = () => {
+    setScopeDepartmentId("");
+    setAuditorEmployeeId("");
+    setStartDate("");
+    setEndDate("");
   };
 
   return (
     <div className="space-y-6 p-2 lg:p-0">
+      <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Start New Audit</DialogTitle>
+            <DialogDescription>
+              Create an audit cycle from live department and employee data.
+            </DialogDescription>
+          </DialogHeader>
+          <form
+            className="space-y-4"
+            onSubmit={async (event) => {
+              event.preventDefault();
+              await getAuditsRepository().createAuditCycle({
+                scopeDepartmentId,
+                startDate,
+                endDate,
+                auditorEmployeeIds: [auditorEmployeeId],
+              });
+              resetCreateForm();
+              setIsCreateOpen(false);
+              await loadData();
+            }}
+          >
+            <div className="space-y-2">
+              <Label>Target Department</Label>
+              <Select
+                value={scopeDepartmentId}
+                onValueChange={setScopeDepartmentId}
+                required
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select department..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {departments.map((department) => (
+                    <SelectItem key={department.id} value={department.id}>
+                      {department.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>Auditor</Label>
+              <Select
+                value={auditorEmployeeId}
+                onValueChange={setAuditorEmployeeId}
+                required
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select auditor..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {employees.map((employee) => (
+                    <SelectItem key={employee.id} value={employee.id}>
+                      {employee.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="audit-start">Start</Label>
+                <DatePicker
+                  id="audit-start"
+                  type="datetime-local"
+                  value={startDate}
+                  onChange={(event) => setStartDate(event.target.value)}
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="audit-end">End</Label>
+                <DatePicker
+                  id="audit-end"
+                  type="datetime-local"
+                  value={endDate}
+                  onChange={(event) => setEndDate(event.target.value)}
+                  required
+                />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={resetCreateForm}>
+                Reset
+              </Button>
+              <Button type="submit">Create Audit</Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
       <div className="flex items-end justify-between">
         <div>
           <h1 className="page-title">Audits</h1>
@@ -66,7 +181,10 @@ export function AuditsPage() {
             match system records.
           </p>
         </div>
-        <Button className="shadow-lg shadow-primary/20">
+        <Button
+          className="shadow-lg shadow-primary/20"
+          onClick={() => setIsCreateOpen(true)}
+        >
           <ClipboardCheck className="mr-2 size-4" />
           Start New Audit
         </Button>
@@ -87,12 +205,16 @@ export function AuditsPage() {
             </TableHeader>
             <TableBody>
               {audits.map((a) => {
-                const dept = departments.find(
-                  (x) => x.id === a.scopeDepartmentId,
-                );
                 const auditorName =
-                  employees.find((e) => e.id === a.conductedByEmployeeId)
-                    ?.name || "Unknown";
+                  a.auditors
+                    ?.map((auditor) => auditor.employee.name)
+                    .join(", ") ||
+                  a.createdBy?.name ||
+                  "Unassigned";
+                const discrepancyCount =
+                  a.items?.filter((item) =>
+                    ["MISSING", "DAMAGED", "UNRESOLVED"].includes(item.status),
+                  ).length ?? 0;
 
                 let badgeVariant: "default" | "success" | "warning" = "default";
                 if (a.status === "OPEN") badgeVariant = "warning";
@@ -101,7 +223,9 @@ export function AuditsPage() {
                 return (
                   <TableRow key={a.id}>
                     <TableCell className="font-medium">
-                      {dept?.name || "All Departments"}
+                      {a.scopeDepartment?.name ||
+                        a.scopeLocation ||
+                        "All Departments"}
                     </TableCell>
                     <TableCell>{auditorName}</TableCell>
                     <TableCell>
@@ -112,7 +236,7 @@ export function AuditsPage() {
                         {a.status.replace("_", " ")}
                       </Badge>
                     </TableCell>
-                    <TableCell>{a.status === "CLOSED" ? "0" : "-"}</TableCell>
+                    <TableCell>{discrepancyCount}</TableCell>
                     <TableCell className="text-right">
                       {a.status === "OPEN" && (
                         <Button

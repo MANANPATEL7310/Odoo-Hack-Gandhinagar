@@ -1,4 +1,9 @@
 import { apiClient } from "@/services/http/api-client";
+import {
+  unwrapList,
+  type ApiSuccess,
+  type PaginatedData,
+} from "@/services/http/api-response";
 import type { AllocationsRepository } from "@/services/data/repositories/allocations.repository";
 import type {
   Allocation,
@@ -9,27 +14,32 @@ import type {
   TransferRequest,
 } from "@/services/data/types/domain";
 
-type ApiSuccess<T> = {
-  success: true;
-  data: T;
-};
-
 export const apiAllocationsRepository: AllocationsRepository = {
   async listAllocations() {
-    const response =
-      await apiClient.get<ApiSuccess<Allocation[]>>("/allocations");
-    return response.data.data;
+    const response = await apiClient.get<
+      ApiSuccess<Allocation[] | PaginatedData<Allocation>>
+    >("/allocations", {
+      params: { pageSize: 1000 },
+    });
+    return unwrapList(response.data.data);
   },
 
   async listTransferRequests() {
-    const response =
-      await apiClient.get<ApiSuccess<TransferRequest[]>>("/transfer-requests");
-    return response.data.data;
+    const response = await apiClient.get<
+      ApiSuccess<TransferRequest[] | PaginatedData<TransferRequest>>
+    >("/transfer-requests", {
+      params: { pageSize: 1000 },
+    });
+    return unwrapList(response.data.data);
   },
 
   async listAssets() {
-    const response = await apiClient.get<ApiSuccess<Asset[]>>("/assets");
-    return response.data.data;
+    const response = await apiClient.get<
+      ApiSuccess<Asset[] | PaginatedData<Asset>>
+    >("/assets", {
+      params: { pageSize: 1000 },
+    });
+    return unwrapList(response.data.data);
   },
 
   async listEmployees() {
@@ -51,9 +61,10 @@ export const apiAllocationsRepository: AllocationsRepository = {
     return response.data.data;
   },
 
-  async returnAllocation(allocationId: string) {
+  async returnAllocation(allocationId: string, conditionAtReturn: string) {
     const response = await apiClient.patch<ApiSuccess<Allocation>>(
       `/allocations/${allocationId}/return`,
+      { conditionAtReturn },
     );
     return response.data.data;
   },

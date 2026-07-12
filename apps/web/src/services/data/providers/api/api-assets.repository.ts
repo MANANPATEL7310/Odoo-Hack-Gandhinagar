@@ -1,4 +1,9 @@
 import { apiClient } from "@/services/http/api-client";
+import {
+  unwrapList,
+  type ApiSuccess,
+  type PaginatedData,
+} from "@/services/http/api-response";
 import type { AssetsRepository } from "@/services/data/repositories/assets.repository";
 import type {
   Asset,
@@ -7,14 +12,20 @@ import type {
   UploadedFile,
 } from "@/services/data/types/domain";
 
-type ApiSuccess<T> = {
-  success: true;
-  data: T;
-};
-
 export const apiAssetsRepository: AssetsRepository = {
   async listAssets() {
-    const response = await apiClient.get<ApiSuccess<Asset[]>>("/assets");
+    const response = await apiClient.get<
+      ApiSuccess<Asset[] | PaginatedData<Asset>>
+    >("/assets", {
+      params: { pageSize: 1000 },
+    });
+    return unwrapList(response.data.data);
+  },
+
+  async getAsset(assetId) {
+    const response = await apiClient.get<ApiSuccess<Asset>>(
+      `/assets/${assetId}`,
+    );
     return response.data.data;
   },
 

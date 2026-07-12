@@ -9,12 +9,7 @@ import {
 import { appRoutes } from "@template/shared";
 import { Button } from "@/components/ui/button";
 import { Animate } from "@/components/ui/animate";
-
-const stats = [
-  { icon: Package, value: "7", label: "Asset Lifecycle States" },
-  { icon: ShieldCheck, value: "0", label: "Double-Allocations Possible" },
-  { icon: CalendarCheck, value: "4", label: "Role-Gated Permission Tiers" },
-];
+import type { PublicMetrics } from "@/features/marketing/pages/home-page";
 
 const bullets = [
   "Real-time KPI dashboard per role",
@@ -22,7 +17,32 @@ const bullets = [
   "Automated audit & discrepancy reporting",
 ];
 
-export function HeroSection() {
+interface HeroSectionProps {
+  metrics: PublicMetrics | null;
+}
+
+const metricValue = (value: number | undefined, suffix = "") =>
+  value === undefined ? "..." : `${value}${suffix}`;
+
+export function HeroSection({ metrics }: HeroSectionProps) {
+  const stats = [
+    {
+      icon: Package,
+      value: metricValue(metrics?.totalAssets),
+      label: "Assets Tracked",
+    },
+    {
+      icon: ShieldCheck,
+      value: metricValue(metrics?.assetHealthPercent, "%"),
+      label: "Asset Health",
+    },
+    {
+      icon: CalendarCheck,
+      value: metricValue(metrics?.activeBookings),
+      label: "Active Bookings",
+    },
+  ];
+
   const scrollToFeatures = () => {
     document
       .querySelector("#features")

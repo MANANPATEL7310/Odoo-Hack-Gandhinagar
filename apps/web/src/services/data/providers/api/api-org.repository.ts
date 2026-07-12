@@ -1,6 +1,10 @@
 import { apiClient } from "@/services/http/api-client";
 import type { OrgRepository } from "@/services/data/repositories/org.repository";
 import type {
+  CreateAssetCategoryInput,
+  CreateDepartmentInput,
+} from "@/services/data/repositories/org.repository";
+import type {
   AssetCategory,
   Department,
   Employee,
@@ -26,6 +30,22 @@ export const apiOrgRepository: OrgRepository = {
 
   async listEmployees() {
     const response = await apiClient.get<ApiSuccess<Employee[]>>("/employees");
+    return response.data.data;
+  },
+
+  async createDepartment(payload: CreateDepartmentInput) {
+    const response = await apiClient.post<ApiSuccess<Department>>(
+      "/departments",
+      payload,
+    );
+    return response.data.data;
+  },
+
+  async createAssetCategory(payload: CreateAssetCategoryInput) {
+    const response = await apiClient.post<ApiSuccess<AssetCategory>>(
+      "/asset-categories",
+      payload,
+    );
     return response.data.data;
   },
 };

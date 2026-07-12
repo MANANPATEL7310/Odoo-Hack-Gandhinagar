@@ -26,6 +26,8 @@ export type DomainEvents = {
   };
   "booking:created": { bookingId: string; assetId: string; actorId: string };
   "booking:cancelled": { bookingId: string; assetId: string; actorId: string };
+  "booking:started": { bookingId: string; assetId: string; actorId: string };
+  "booking:completed": { bookingId: string; assetId: string; actorId: string };
   "maintenance:created": {
     requestId: string;
     assetId: string;

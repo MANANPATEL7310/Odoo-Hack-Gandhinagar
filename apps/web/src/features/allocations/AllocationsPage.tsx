@@ -45,21 +45,11 @@ export function AllocationsPage() {
           departmentsData,
           employeesData,
         ] = await Promise.all([
-          getAllocationsRepository()
-            .listAllocations()
-            .catch(() => []),
-          getAllocationsRepository()
-            .listTransferRequests()
-            .catch(() => []),
-          getAssetsRepository()
-            .listAssets()
-            .catch(() => []),
-          getOrgRepository()
-            .listDepartments()
-            .catch(() => []),
-          getOrgRepository()
-            .listEmployees()
-            .catch(() => []),
+          getAllocationsRepository().listAllocations(),
+          getAllocationsRepository().listTransferRequests(),
+          getAssetsRepository().listAssets(),
+          getOrgRepository().listDepartments(),
+          getOrgRepository().listEmployees(),
         ]);
         setAllocations(allocationsData);
         setTransferRequests(transfersData);
@@ -73,18 +63,25 @@ export function AllocationsPage() {
     loadData();
   }, []);
 
-  const refreshAllocations = async () => {
-    const data = await getAllocationsRepository()
-      .listAllocations()
-      .catch(() => []);
-    setAllocations(data);
-  };
-
-  const refreshTransfers = async () => {
-    const data = await getAllocationsRepository()
-      .listTransferRequests()
-      .catch(() => []);
-    setTransferRequests(data);
+  const refreshAllData = async () => {
+    const [
+      allocationsData,
+      transfersData,
+      assetsData,
+      departmentsData,
+      employeesData,
+    ] = await Promise.all([
+      getAllocationsRepository().listAllocations(),
+      getAllocationsRepository().listTransferRequests(),
+      getAssetsRepository().listAssets(),
+      getOrgRepository().listDepartments(),
+      getOrgRepository().listEmployees(),
+    ]);
+    setAllocations(allocationsData);
+    setTransferRequests(transfersData);
+    setAssets(assetsData);
+    setDepartments(departmentsData);
+    setEmployees(employeesData);
   };
 
   const availableAssets = assets.filter((a) => a.status === "AVAILABLE");
@@ -99,7 +96,7 @@ export function AllocationsPage() {
         onSubmit={async (payload) => {
           try {
             await getAllocationsRepository().createAllocation(payload);
-            await refreshAllocations();
+            await refreshAllData();
           } catch (e) {
             console.error("Failed to create allocation", e);
           }
@@ -144,14 +141,26 @@ export function AllocationsPage() {
                       </TableHeader>
                       <TableBody>
                         {allocations.map((a) => {
-                          const asset = assets.find((x) => x.id === a.assetId);
+                          const assetName =
+                            a.asset?.name ||
+                            assets.find((asset) => asset.id === a.assetId)
+                              ?.name ||
+                            "Unknown";
                           const holderName =
-                            employees.find((e) => e.id === a.holderEmployeeId)
-                              ?.name || "Unknown";
+                            a.holderEmployee?.name ||
+                            a.holderDepartment?.name ||
+                            employees.find(
+                              (employee) => employee.id === a.holderEmployeeId,
+                            )?.name ||
+                            departments.find(
+                              (department) =>
+                                department.id === a.holderDepartmentId,
+                            )?.name ||
+                            "Unknown";
                           return (
                             <TableRow key={a.id}>
                               <TableCell className="font-medium">
-                                {asset?.name}
+                                {assetName}
                               </TableCell>
                               <TableCell>{holderName}</TableCell>
                               <TableCell>
@@ -175,11 +184,16 @@ export function AllocationsPage() {
                                     size="sm"
                                     className="text-primary hover:text-primary/80"
                                     onClick={async () => {
+                                      const conditionAtReturn = window.prompt(
+                                        "Condition at return",
+                                      );
+                                      if (!conditionAtReturn) return;
                                       try {
                                         await getAllocationsRepository().returnAllocation(
                                           a.id,
+                                          conditionAtReturn || "Normal",
                                         );
-                                        await refreshAllocations();
+                                        await refreshAllData();
                                       } catch (e) {
                                         console.error(
                                           "Failed to return allocation",
@@ -219,14 +233,29 @@ export function AllocationsPage() {
                       </TableHeader>
                       <TableBody>
                         {transferRequests.map((tr) => {
-                          const asset = assets.find((x) => x.id === tr.assetId);
+                          const assetName =
+                            tr.asset?.name ||
+                            assets.find((asset) => asset.id === tr.assetId)
+                              ?.name ||
+                            "Unknown";
                           const requesterName =
+                            tr.requestedBy?.name ||
                             employees.find(
-                              (e) => e.id === tr.requesterEmployeeId,
-                            )?.name || "Unknown";
-                          const targetDept = departments.find(
-                            (x) => x.id === tr.targetDepartmentId,
-                          );
+                              (employee) =>
+                                employee.id === tr.requestedByEmployeeId,
+                            )?.name ||
+                            "Unknown";
+                          const targetName =
+                            tr.targetEmployee?.name ||
+                            tr.targetDepartment?.name ||
+                            employees.find(
+                              (employee) => employee.id === tr.targetEmployeeId,
+                            )?.name ||
+                            departments.find(
+                              (department) =>
+                                department.id === tr.targetDepartmentId,
+                            )?.name ||
+                            "Unknown";
 
                           let badgeVariant:
                             | "default"
@@ -242,12 +271,10 @@ export function AllocationsPage() {
                           return (
                             <TableRow key={tr.id}>
                               <TableCell className="font-medium">
-                                {asset?.name}
+                                {assetName}
                               </TableCell>
                               <TableCell>{requesterName}</TableCell>
-                              <TableCell>
-                                {targetDept?.name || "Unknown"}
-                              </TableCell>
+                              <TableCell>{targetName}</TableCell>
                               <TableCell>
                                 <Badge variant={badgeVariant}>
                                   {tr.status}
@@ -265,7 +292,7 @@ export function AllocationsPage() {
                                           await getAllocationsRepository().rejectTransferRequest(
                                             tr.id,
                                           );
-                                          await refreshTransfers();
+                                          await refreshAllData();
                                         } catch (e) {
                                           console.error(
                                             "Failed to reject transfer",
@@ -284,7 +311,7 @@ export function AllocationsPage() {
                                           await getAllocationsRepository().approveTransferRequest(
                                             tr.id,
                                           );
-                                          await refreshTransfers();
+                                          await refreshAllData();
                                         } catch (e) {
                                           console.error(
                                             "Failed to approve transfer",

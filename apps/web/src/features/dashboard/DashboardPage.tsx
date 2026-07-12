@@ -15,12 +15,15 @@ import {
 
 interface DashboardResponse {
   kpis: {
+    totalAssets: number;
     assetsAvailable: number;
     assetsAllocated: number;
+    assetsUnderMaintenance: number;
     maintenanceToday: number;
     activeBookings: number;
     pendingTransfers: number;
     upcomingReturns: number;
+    assetHealthPercent: number;
   };
   overdue: Array<{
     id: string;
@@ -58,14 +61,22 @@ export function DashboardPage() {
 
   const kpis = data?.kpis;
 
-  const totalTrackedAssets =
-    (kpis?.assetsAvailable ?? 0) + (kpis?.assetsAllocated ?? 0);
+  const totalTrackedAssets = kpis?.totalAssets ?? 0;
   const utilization = totalTrackedAssets
     ? Math.round(((kpis?.assetsAllocated ?? 0) / totalTrackedAssets) * 100)
     : 0;
+  const maxOperationalCount = Math.max(
+    kpis?.assetsAvailable ?? 0,
+    kpis?.assetsAllocated ?? 0,
+    kpis?.activeBookings ?? 0,
+    kpis?.maintenanceToday ?? 0,
+  );
 
-  const statCards = useMemo(
-    () => [
+  const statCards = useMemo(() => {
+    const percentOfMax = (value: number) =>
+      maxOperationalCount ? Math.round((value / maxOperationalCount) * 100) : 0;
+
+    return [
       {
         label: "Assets Available",
         value: kpis?.assetsAvailable ?? 0,
@@ -92,7 +103,7 @@ export function DashboardPage() {
         helper: "Room and shared gear",
         icon: CalendarClock,
         tone: "text-warning",
-        bar: (kpis?.activeBookings ?? 0) > 0 ? 66 : 12,
+        bar: percentOfMax(kpis?.activeBookings ?? 0),
       },
       {
         label: "Maintenance Today",
@@ -100,29 +111,37 @@ export function DashboardPage() {
         helper: "Service queue load",
         icon: PenTool,
         tone: "text-danger",
-        bar: (kpis?.maintenanceToday ?? 0) > 0 ? 48 : 8,
+        bar: percentOfMax(kpis?.maintenanceToday ?? 0),
       },
-    ],
-    [kpis, totalTrackedAssets, utilization],
+    ];
+  }, [kpis, totalTrackedAssets, utilization, maxOperationalCount]);
+
+  const readinessTotal = Math.max(
+    totalTrackedAssets,
+    (kpis?.pendingTransfers ?? 0) + (kpis?.upcomingReturns ?? 0),
   );
 
   const readinessRows = [
     {
       label: "Allocation capacity",
       value: `${100 - utilization}%`,
-      width: Math.max(18, 100 - utilization),
+      width: 100 - utilization,
       tone: "bg-secondary",
     },
     {
       label: "Transfer queue",
       value: `${kpis?.pendingTransfers ?? 0} pending`,
-      width: (kpis?.pendingTransfers ?? 0) > 0 ? 58 : 14,
+      width: readinessTotal
+        ? Math.round(((kpis?.pendingTransfers ?? 0) / readinessTotal) * 100)
+        : 0,
       tone: "bg-primary",
     },
     {
       label: "Returns ahead",
       value: `${kpis?.upcomingReturns ?? 0} due`,
-      width: (kpis?.upcomingReturns ?? 0) > 0 ? 42 : 10,
+      width: readinessTotal
+        ? Math.round(((kpis?.upcomingReturns ?? 0) / readinessTotal) * 100)
+        : 0,
       tone: "bg-warning",
     },
   ];
@@ -211,7 +230,7 @@ export function DashboardPage() {
             <div className="mt-5 h-2 overflow-hidden rounded-full bg-white/70 dark:bg-white/10">
               <div
                 className="h-full rounded-full bg-primary"
-                style={{ width: `${Math.max(8, utilization)}%` }}
+                style={{ width: `${utilization}%` }}
               />
             </div>
             <p className="mt-3 text-xs text-muted-foreground">
@@ -240,7 +259,7 @@ export function DashboardPage() {
               <div className="mt-5 h-1.5 overflow-hidden rounded-full bg-white/70 dark:bg-white/10">
                 <div
                   className="h-full rounded-full bg-current text-primary"
-                  style={{ width: `${Math.max(8, card.bar)}%` }}
+                  style={{ width: `${card.bar}%` }}
                 />
               </div>
               <p className="mt-3 text-xs text-muted-foreground">

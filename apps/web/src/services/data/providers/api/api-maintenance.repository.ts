@@ -1,25 +1,46 @@
 import { apiClient } from "@/services/http/api-client";
+import {
+  unwrapList,
+  type ApiSuccess,
+  type PaginatedData,
+} from "@/services/http/api-response";
 import { MaintenanceRepository } from "../../repositories/maintenance.repository";
-import type { MaintenanceRequest } from "../../types/domain";
+import type {
+  CreateMaintenanceRequestInput,
+  MaintenanceRequest,
+} from "../../types/domain";
 
 export const apiMaintenanceRepository: MaintenanceRepository = {
   async listMaintenanceRequests(): Promise<MaintenanceRequest[]> {
-    // The backend merged a GET /maintenance-requests in maintenance.routes.ts? Wait, let's just assume it's /maintenance-requests
-    const { data } = await apiClient.get("/maintenance-requests");
-    return data.data || [];
+    const response = await apiClient.get<
+      ApiSuccess<MaintenanceRequest[] | PaginatedData<MaintenanceRequest>>
+    >("/maintenance-requests", {
+      params: { pageSize: 1000 },
+    });
+    return unwrapList(response.data.data);
   },
 
   async createMaintenanceRequest(
-    payload: Omit<MaintenanceRequest, "id" | "status">,
+    payload: CreateMaintenanceRequestInput,
   ): Promise<MaintenanceRequest> {
-    const { data } = await apiClient.post("/maintenance-requests", payload);
-    return data.data;
+    const response = await apiClient.post<ApiSuccess<MaintenanceRequest>>(
+      "/maintenance-requests",
+      payload,
+    );
+    return response.data.data;
   },
 
-  async resolveMaintenanceRequest(id: string): Promise<MaintenanceRequest> {
-    const { data } = await apiClient.patch(
+  async startWork(id: string): Promise<MaintenanceRequest> {
+    const response = await apiClient.patch<ApiSuccess<MaintenanceRequest>>(
+      `/maintenance-requests/${id}/start`,
+    );
+    return response.data.data;
+  },
+
+  async resolveIssue(id: string): Promise<MaintenanceRequest> {
+    const response = await apiClient.patch<ApiSuccess<MaintenanceRequest>>(
       `/maintenance-requests/${id}/resolve`,
     );
-    return data.data;
+    return response.data.data;
   },
 };

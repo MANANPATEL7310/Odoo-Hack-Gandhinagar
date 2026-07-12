@@ -89,7 +89,7 @@ export function RolesSection() {
               Roles
             </span>
             <h2 className="mt-3 text-3xl font-bold tracking-tight text-foreground md:text-4xl">
-              Four roles, zero ambiguity
+              Role clarity from the source of truth
             </h2>
             <p className="mx-auto mt-4 max-w-2xl text-base text-muted-foreground">
               Roles are{" "}

@@ -46,6 +46,29 @@ export const cancelBookingController = asyncHandler(
   },
 );
 
+export const startBookingController = asyncHandler(
+  async (req: Request, res: Response) => {
+    const booking = await bookingsService.startBooking(
+      req.params.id as string,
+      {
+        id: req.user!.sub,
+        role: req.user!.role,
+      },
+    );
+    return sendOk(res, booking, "Booking started successfully.");
+  },
+);
+
+export const completeBookingController = asyncHandler(
+  async (req: Request, res: Response) => {
+    const booking = await bookingsService.completeBooking(
+      req.params.id as string,
+      { id: req.user!.sub, role: req.user!.role },
+    );
+    return sendOk(res, booking, "Booking completed successfully.");
+  },
+);
+
 export const rescheduleBookingController = asyncHandler(
   async (req: Request, res: Response) => {
     const parsed = rescheduleBookingSchema.parse(req.body);

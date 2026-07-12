@@ -26,16 +26,32 @@ export type MaintenanceStatus =
   | "TECHNICIAN_ASSIGNED"
   | "IN_PROGRESS"
   | "RESOLVED";
+export type AuditStatus = "OPEN" | "CLOSED";
+export type AuditItemStatus =
+  | "UNVERIFIED"
+  | "VERIFIED"
+  | "MISSING"
+  | "DAMAGED"
+  | "UNRESOLVED";
+
+export interface EntitySummary {
+  id: string;
+  name: string;
+  email?: string;
+  assetTag?: string;
+  status?: string;
+}
 
 export interface Employee {
   id: string;
   name: string;
   email: string;
-  passwordHash: string;
   departmentId?: string;
+  department?: Department;
   role: Role;
   status: EmployeeStatus;
   createdAt: string;
+  updatedAt?: string;
 }
 
 export interface Department {
@@ -44,6 +60,8 @@ export interface Department {
   headEmployeeId?: string;
   parentDepartmentId?: string;
   status: DepartmentStatus;
+  head?: EntitySummary | null;
+  parent?: EntitySummary | null;
 }
 
 export interface AssetCategory {
@@ -70,6 +88,12 @@ export interface Asset {
   photoUrls: string[];
   documentUrls: string[];
   categoryMetadata?: Record<string, unknown>;
+  category?: AssetCategory | EntitySummary;
+  location?: Department | EntitySummary | null;
+  allocations?: Allocation[];
+  maintenanceRequests?: MaintenanceRequest[];
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface Allocation {
@@ -82,6 +106,11 @@ export interface Allocation {
   returnedAt?: string;
   conditionAtReturn?: string;
   status: AllocationStatus;
+  asset?: Asset | EntitySummary;
+  holderEmployee?: Employee | EntitySummary | null;
+  holderDepartment?: Department | EntitySummary | null;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface TransferRequest {
@@ -93,6 +122,15 @@ export interface TransferRequest {
   targetDepartmentId?: string;
   reason?: string;
   status: TransferStatus;
+  asset?: Asset | EntitySummary;
+  requestedBy?: Employee | EntitySummary;
+  targetEmployee?: Employee | EntitySummary | null;
+  targetDepartment?: Department | EntitySummary | null;
+  decidedByEmployeeId?: string;
+  decidedBy?: Employee | EntitySummary | null;
+  decidedAt?: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface Booking {
@@ -102,6 +140,10 @@ export interface Booking {
   startTime: string;
   endTime: string;
   status: BookingStatus;
+  resourceAsset?: Asset | EntitySummary;
+  bookedBy?: Employee | EntitySummary;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface MaintenanceRequest {
@@ -112,7 +154,17 @@ export interface MaintenanceRequest {
   priority: MaintenancePriority;
   photoUrl?: string;
   status: MaintenanceStatus;
+  decidedByEmployeeId?: string;
+  decidedAt?: string;
+  rejectionReason?: string;
   technicianEmployeeId?: string;
+  resolvedAt?: string;
+  asset?: Asset | EntitySummary;
+  raisedBy?: Employee | EntitySummary;
+  decidedBy?: Employee | EntitySummary | null;
+  technician?: Employee | EntitySummary | null;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface CreateAssetInput {
@@ -125,15 +177,22 @@ export interface CreateAssetInput {
 
 export interface CreateAllocationInput {
   assetId: string;
-  holderEmployeeId: string;
+  holderEmployeeId?: string;
+  holderDepartmentId?: string;
   expectedReturnDate?: string;
 }
 
 export interface CreateBookingInput {
   resourceAssetId: string;
-  bookedByEmployeeId: string;
   startTime: string;
   endTime: string;
+}
+
+export interface CreateMaintenanceRequestInput {
+  assetId: string;
+  issueDescription: string;
+  priority: MaintenancePriority;
+  photoUrl?: string;
 }
 
 export interface UploadedFile {
@@ -144,7 +203,30 @@ export interface UploadedFile {
 export interface AuditCycle {
   id: string;
   scopeDepartmentId?: string;
+  scopeLocation?: string;
   createdByEmployeeId: string;
   startDate: string;
-  status: "OPEN" | "CLOSED";
+  endDate?: string;
+  closedAt?: string;
+  status: AuditStatus;
+  scopeDepartment?: Department | EntitySummary | null;
+  createdBy?: Employee | EntitySummary;
+  auditors?: Array<{
+    employeeId: string;
+    employee: Employee | EntitySummary;
+  }>;
+  items?: Array<{
+    status: AuditItemStatus;
+  }>;
+  _count?: {
+    items: number;
+  };
+}
+
+export interface CreateAuditCycleInput {
+  scopeDepartmentId?: string;
+  scopeLocation?: string;
+  startDate: string;
+  endDate: string;
+  auditorEmployeeIds: string[];
 }

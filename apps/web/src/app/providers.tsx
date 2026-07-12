@@ -1,9 +1,8 @@
 import { QueryClientProvider } from "@tanstack/react-query";
 
-import { RouterProvider } from "react-router-dom";
 import { Toaster } from "react-hot-toast";
 import { queryClient } from "@/lib/query-client";
-import { router } from "@/router";
+import { AppRouter } from "@/router";
 import { ThemeProvider } from "@/theme/theme-provider";
 import { ErrorBoundary } from "@/components/shared/error-boundary";
 
@@ -12,7 +11,7 @@ export function AppProviders() {
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
         <ThemeProvider>
-          <RouterProvider router={router} />
+          <AppRouter />
           <Toaster
             position="top-right"
             toastOptions={{
@@ -25,7 +24,6 @@ export function AppProviders() {
             }}
           />
         </ThemeProvider>
-
       </QueryClientProvider>
     </ErrorBoundary>
   );

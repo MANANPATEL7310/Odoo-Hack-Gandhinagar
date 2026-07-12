@@ -22,7 +22,8 @@ export function ResetPasswordPage() {
             Define your new secure password credential.
           </h2>
           <p className="max-w-xl text-base leading-7 text-surface/80">
-            Once submitted, your account will be updated immediately. Please use a strong combination of characters.
+            Once submitted, your account will be updated immediately. Please use
+            a strong combination of characters.
           </p>
         </div>
       </Card>
@@ -46,12 +47,16 @@ export function ResetPasswordPage() {
 
           {!hasToken ? (
             <div className="rounded border border-danger/15 bg-danger/10 p-4 text-sm text-danger-dark">
-              Warning: Password reset token is missing from the link URL. Please request a new link from the forgot password page.
+              Warning: Password reset token is missing from the link URL. Please
+              request a new link from the forgot password page.
             </div>
           ) : (
             <form className="space-y-5" onSubmit={onSubmit}>
               <div className="space-y-2">
-                <label className="text-sm font-medium text-foreground" htmlFor="newPassword">
+                <label
+                  className="text-sm font-medium text-foreground"
+                  htmlFor="newPassword"
+                >
                   New Password
                 </label>
                 <Input
@@ -71,7 +76,10 @@ export function ResetPasswordPage() {
 
           <p className="text-sm text-muted-foreground">
             Return to{" "}
-            <Link className="font-medium text-primary hover:text-primary-dark" to={appRoutes.login}>
+            <Link
+              className="font-medium text-primary hover:text-primary-dark"
+              to={appRoutes.login}
+            >
               Log in page
             </Link>
           </p>

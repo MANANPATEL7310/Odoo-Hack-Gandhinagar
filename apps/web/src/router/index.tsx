@@ -1,57 +1,85 @@
-import { createBrowserRouter } from "react-router-dom";
-import { appRoutes } from "@template/shared";
-import { AppLayout } from "@/components/shared/app-layout";
-import { NotFoundPage } from "@/components/shared/not-found";
-import { ProtectedRoute } from "@/features/auth/routes/protected-route";
-import { LoginPage } from "@/features/auth/pages/login-page";
-import { SignupPage } from "@/features/auth/pages/signup-page";
-import { ForgotPasswordPage } from "@/features/auth/pages/forgot-password-page";
-import { ResetPasswordPage } from "@/features/auth/pages/reset-password-page";
-import { DashboardPage } from "@/features/dashboard/pages/dashboard-page";
-import { HomePage } from "@/features/marketing/pages/home-page";
-import { SettingsPage } from "@/features/settings/pages/settings-page";
+import {
+  createBrowserRouter,
+  Navigate,
+  RouterProvider,
+} from "react-router-dom";
+import { DashboardLayout } from "../components/shared/DashboardLayout";
+import { DashboardPage } from "../features/dashboard/DashboardPage";
+import { AssetRegistryPage } from "../features/assets/AssetRegistryPage";
+import { LoginPage } from "../features/auth/LoginPage";
+import { SignupPage } from "../features/auth/SignupPage";
+import { ProtectedRoute } from "../components/shared/ProtectedRoute";
+import { OrgSetupPage } from "../features/org-setup/OrgSetupPage";
+import { AllocationsPage } from "../features/allocations/AllocationsPage";
+import { BookingsPage } from "../features/bookings/BookingsPage";
+import { MaintenancePage } from "../features/maintenance/MaintenancePage";
+import { AuditsPage } from "../features/audits/AuditsPage";
+import { ReportsPage } from "../features/reports/ReportsPage";
+import { HomePage } from "../features/marketing/pages/home-page";
 
-export const router = createBrowserRouter([
+const router = createBrowserRouter([
   {
-    path: appRoutes.home,
+    path: "/",
     element: <HomePage />,
   },
   {
-    path: appRoutes.login,
+    path: "/login",
     element: <LoginPage />,
   },
   {
-    path: appRoutes.signup,
+    path: "/signup",
     element: <SignupPage />,
   },
   {
-    path: appRoutes.forgotPassword,
-    element: <ForgotPasswordPage />,
-  },
-  {
-    path: appRoutes.resetPassword,
-    element: <ResetPasswordPage />,
-  },
-  {
+    path: "/app",
     element: <ProtectedRoute />,
     children: [
       {
-        element: <AppLayout />,
+        path: "",
+        element: <DashboardLayout />,
         children: [
           {
-            path: appRoutes.dashboard,
+            index: true,
+            element: <Navigate to="/app/dashboard" replace />,
+          },
+          {
+            path: "dashboard",
             element: <DashboardPage />,
           },
           {
-            path: appRoutes.settings,
-            element: <SettingsPage />,
+            path: "org-setup",
+            element: <OrgSetupPage />,
+          },
+          {
+            path: "assets",
+            element: <AssetRegistryPage />,
+          },
+          {
+            path: "allocations",
+            element: <AllocationsPage />,
+          },
+          {
+            path: "bookings",
+            element: <BookingsPage />,
+          },
+          {
+            path: "maintenance",
+            element: <MaintenancePage />,
+          },
+          {
+            path: "audits",
+            element: <AuditsPage />,
+          },
+          {
+            path: "reports",
+            element: <ReportsPage />,
           },
         ],
       },
     ],
   },
-  {
-    path: "*",
-    element: <NotFoundPage />,
-  },
 ]);
+
+export function AppRouter() {
+  return <RouterProvider router={router} />;
+}

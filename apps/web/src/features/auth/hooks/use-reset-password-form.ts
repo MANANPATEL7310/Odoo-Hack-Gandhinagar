@@ -19,12 +19,20 @@ export function useResetPasswordForm() {
   const mutation = useMutation({
     mutationFn: resetPassword,
     onSuccess: (data) => {
-      toast.success(data.message || "Password updated successfully! You can now log in.");
+      toast.success(
+        data.message || "Password updated successfully! You can now log in.",
+      );
       navigate(appRoutes.login);
     },
     onError: (error: unknown) => {
-      const err = error as { response?: { data?: { message?: string } }; message?: string };
-      const errMsg = err.response?.data?.message || err.message || "Failed to reset password.";
+      const err = error as {
+        response?: { data?: { message?: string } };
+        message?: string;
+      };
+      const errMsg =
+        err.response?.data?.message ||
+        err.message ||
+        "Failed to reset password.";
       toast.error(errMsg);
     },
   });

@@ -17,7 +17,8 @@ export const NotificationTypes = {
   RoleChanged: "RoleChanged",
 } as const;
 
-export type NotificationType = typeof NotificationTypes[keyof typeof NotificationTypes];
+export type NotificationType =
+  (typeof NotificationTypes)[keyof typeof NotificationTypes];
 
 export const notificationSchema = z.object({
   id: z.string(),

@@ -2,7 +2,12 @@ import type { Request, Response } from "express";
 import { sendOk, sendCreated, sendError } from "../../lib/response.js";
 import { asyncHandler } from "../../lib/async-handler.js";
 import { authService } from "./auth.service.js";
-import type { SignupInput, LoginInput, ForgotPasswordInput, ResetPasswordInput } from "@template/shared";
+import type {
+  SignupInput,
+  LoginInput,
+  ForgotPasswordInput,
+  ResetPasswordInput,
+} from "@template/shared";
 
 export const loginController = asyncHandler(
   async (req: Request, res: Response) => {
@@ -20,14 +25,18 @@ export const signupController = asyncHandler(
 
 export const forgotPasswordController = asyncHandler(
   async (req: Request, res: Response) => {
-    const result = await authService.forgotPassword(req.body as ForgotPasswordInput);
+    const result = await authService.forgotPassword(
+      req.body as ForgotPasswordInput,
+    );
     return sendOk(res, result, "Password reset request processed.");
   },
 );
 
 export const resetPasswordController = asyncHandler(
   async (req: Request, res: Response) => {
-    const result = await authService.resetPassword(req.body as ResetPasswordInput);
+    const result = await authService.resetPassword(
+      req.body as ResetPasswordInput,
+    );
     return sendOk(res, result, "Password reset successful.");
   },
 );

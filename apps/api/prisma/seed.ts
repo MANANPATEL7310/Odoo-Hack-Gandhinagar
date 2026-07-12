@@ -17,8 +17,14 @@ async function main() {
     WHERE "returnedAt" IS NULL;
   `);
 
-  const email = process.env.INITIAL_ADMIN_EMAIL || process.env.ADMIN_EMAIL || "admin@example.com";
-  const password = process.env.INITIAL_ADMIN_PASSWORD || process.env.ADMIN_PASSWORD || "changeme123";
+  const email =
+    process.env.INITIAL_ADMIN_EMAIL ||
+    process.env.ADMIN_EMAIL ||
+    "admin@example.com";
+  const password =
+    process.env.INITIAL_ADMIN_PASSWORD ||
+    process.env.ADMIN_PASSWORD ||
+    "changeme123";
 
   console.log(`Seeding bootstrap admin user: ${email}...`);
 

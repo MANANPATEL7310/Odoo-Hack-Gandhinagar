@@ -1,5 +1,9 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { appRoutes, signupInputSchema, type SignupInput } from "@template/shared";
+import {
+  appRoutes,
+  signupInputSchema,
+  type SignupInput,
+} from "@template/shared";
 import { useMutation } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import toast from "react-hot-toast";
@@ -9,7 +13,7 @@ import { useAuthStore } from "@/stores/auth-store";
 
 export function useSignupForm() {
   const navigate = useNavigate();
-  const setSession = useAuthStore((state) => state.setSession);
+  const setAuth = useAuthStore((state) => state.setAuth);
 
   const form = useForm<SignupInput>({
     resolver: zodResolver(signupInputSchema),
@@ -23,20 +27,24 @@ export function useSignupForm() {
   const mutation = useMutation({
     mutationFn: signup,
     onSuccess: (session) => {
-      setSession(session);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const res = session as any;
+      setAuth(res.user, res.accessToken);
       toast.success("Account created successfully! Welcome to your workspace.");
       navigate(appRoutes.dashboard);
     },
     onError: (error: unknown) => {
-      const err = error as { response?: { data?: { message?: string } }; message?: string };
-      const errMsg = err.response?.data?.message || err.message || "Failed to sign up.";
+      const err = error as {
+        response?: { data?: { message?: string } };
+        message?: string;
+      };
+      const errMsg =
+        err.response?.data?.message || err.message || "Failed to sign up.";
       toast.error(errMsg);
     },
   });
 
-  const onSubmit = form.handleSubmit((values) =>
-    mutation.mutate(values),
-  );
+  const onSubmit = form.handleSubmit((values) => mutation.mutate(values));
 
   return {
     form,

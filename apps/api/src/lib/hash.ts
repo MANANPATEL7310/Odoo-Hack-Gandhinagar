@@ -16,7 +16,10 @@ export async function hashPassword(password: string): Promise<string> {
 /**
  * Compares a plaintext password against a salt:derivedKeyHex hash.
  */
-export async function comparePassword(password: string, hash: string): Promise<boolean> {
+export async function comparePassword(
+  password: string,
+  hash: string,
+): Promise<boolean> {
   const parts = hash.split(":");
   const salt = parts[0];
   const key = parts[1];

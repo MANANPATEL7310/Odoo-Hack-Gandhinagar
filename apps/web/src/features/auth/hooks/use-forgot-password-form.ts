@@ -1,5 +1,8 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { forgotPasswordInputSchema, type ForgotPasswordInput } from "@template/shared";
+import {
+  forgotPasswordInputSchema,
+  type ForgotPasswordInput,
+} from "@template/shared";
 import { useMutation } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import toast from "react-hot-toast";
@@ -20,15 +23,19 @@ export function useForgotPasswordForm() {
       form.reset();
     },
     onError: (error: unknown) => {
-      const err = error as { response?: { data?: { message?: string } }; message?: string };
-      const errMsg = err.response?.data?.message || err.message || "Failed to submit request.";
+      const err = error as {
+        response?: { data?: { message?: string } };
+        message?: string;
+      };
+      const errMsg =
+        err.response?.data?.message ||
+        err.message ||
+        "Failed to submit request.";
       toast.error(errMsg);
     },
   });
 
-  const onSubmit = form.handleSubmit((values) =>
-    mutation.mutate(values),
-  );
+  const onSubmit = form.handleSubmit((values) => mutation.mutate(values));
 
   return {
     form,

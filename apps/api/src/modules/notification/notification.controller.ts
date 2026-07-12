@@ -38,7 +38,11 @@ export async function readNotificationController(req: Request, res: Response) {
 
     const { id } = req.params;
     if (!id || typeof id !== "string") {
-      return sendError(res, 400, "Bad Request: Notification ID is missing or invalid.");
+      return sendError(
+        res,
+        400,
+        "Bad Request: Notification ID is missing or invalid.",
+      );
     }
 
     const result = await notificationService.markAsRead(id, userId);
@@ -56,7 +60,9 @@ export async function readNotificationController(req: Request, res: Response) {
     return sendError(
       res,
       500,
-      error instanceof Error ? error.message : "Failed to mark notification as read.",
+      error instanceof Error
+        ? error.message
+        : "Failed to mark notification as read.",
     );
   }
 }

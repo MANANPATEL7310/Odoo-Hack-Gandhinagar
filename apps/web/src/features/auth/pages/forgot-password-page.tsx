@@ -22,7 +22,8 @@ export function ForgotPasswordPage() {
             Regain access to your workspace securely.
           </h2>
           <p className="max-w-xl text-base leading-7 text-surface/80">
-            Submit your registered email address and we will provide a secure password reset link to recover your credentials.
+            Submit your registered email address and we will provide a secure
+            password reset link to recover your credentials.
           </p>
         </div>
       </Card>
@@ -46,7 +47,10 @@ export function ForgotPasswordPage() {
 
           <form className="space-y-5" onSubmit={onSubmit}>
             <div className="space-y-2">
-              <label className="text-sm font-medium text-foreground" htmlFor="email">
+              <label
+                className="text-sm font-medium text-foreground"
+                htmlFor="email"
+              >
                 Email Address
               </label>
               <Input
@@ -68,7 +72,10 @@ export function ForgotPasswordPage() {
 
           <p className="text-sm text-muted-foreground">
             Remembered your password?{" "}
-            <Link className="font-medium text-primary hover:text-primary-dark" to={appRoutes.login}>
+            <Link
+              className="font-medium text-primary hover:text-primary-dark"
+              to={appRoutes.login}
+            >
               Log in here
             </Link>
           </p>

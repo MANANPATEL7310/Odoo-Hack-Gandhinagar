@@ -22,11 +22,12 @@ export function SignupPage() {
             Start tracking and managing team resources easily.
           </h2>
           <p className="max-w-xl text-base leading-7 text-surface/80">
-            Join the registry platform to book common spaces, allocate devices, and request asset transfers smoothly.
+            Join the registry platform to book common spaces, allocate devices,
+            and request asset transfers smoothly.
           </p>
         </div>
       </Card>
-      
+
       <div className="flex justify-center">
         <Card className="w-full max-w-md space-y-6 p-8">
           <div className="space-y-3">
@@ -46,7 +47,10 @@ export function SignupPage() {
 
           <form className="space-y-5" onSubmit={onSubmit}>
             <div className="space-y-2">
-              <label className="text-sm font-medium text-foreground" htmlFor="name">
+              <label
+                className="text-sm font-medium text-foreground"
+                htmlFor="name"
+              >
                 Full Name
               </label>
               <Input
@@ -61,7 +65,10 @@ export function SignupPage() {
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-medium text-foreground" htmlFor="email">
+              <label
+                className="text-sm font-medium text-foreground"
+                htmlFor="email"
+              >
                 Email Address
               </label>
               <Input
@@ -76,7 +83,10 @@ export function SignupPage() {
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-medium text-foreground" htmlFor="password">
+              <label
+                className="text-sm font-medium text-foreground"
+                htmlFor="password"
+              >
                 Password
               </label>
               <Input
@@ -98,7 +108,10 @@ export function SignupPage() {
 
           <p className="text-sm text-muted-foreground">
             Already have an account?{" "}
-            <Link className="font-medium text-primary hover:text-primary-dark" to={appRoutes.login}>
+            <Link
+              className="font-medium text-primary hover:text-primary-dark"
+              to={appRoutes.login}
+            >
               Log in here
             </Link>
           </p>

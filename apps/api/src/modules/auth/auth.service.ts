@@ -3,9 +3,19 @@ import crypto from "crypto";
 import { db } from "../../lib/db.js";
 import { env } from "../../config/env.js";
 import { hashPassword, comparePassword } from "../../lib/hash.js";
-import type { SignupInput, LoginInput, ForgotPasswordInput, ResetPasswordInput } from "@template/shared";
+import type {
+  SignupInput,
+  LoginInput,
+  ForgotPasswordInput,
+  ResetPasswordInput,
+} from "@template/shared";
 import type { Employee, Role } from "@prisma/client";
-import { ConflictError, UnauthorizedError, ForbiddenError, BadRequestError } from "../../lib/errors.js";
+import {
+  ConflictError,
+  UnauthorizedError,
+  ForbiddenError,
+  BadRequestError,
+} from "../../lib/errors.js";
 
 // In-memory store for password reset tokens (Hackathon MVP solution)
 const resetTokens = new Map<string, { email: string; expires: Date }>();
@@ -19,7 +29,9 @@ export class AuthService {
 
     if (existingEmployee) {
       if (existingEmployee.status === "INACTIVE") {
-        throw new ForbiddenError("Account is inactive. Please contact your administrator.");
+        throw new ForbiddenError(
+          "Account is inactive. Please contact your administrator.",
+        );
       }
       throw new ConflictError("Email address is already in use.");
     }
@@ -32,7 +44,7 @@ export class AuthService {
         name: payload.name,
         passwordHash,
         role: "EMPLOYEE" as Role, // Forced server-side
-        status: "ACTIVE",  // Default to Active
+        status: "ACTIVE", // Default to Active
       },
     });
 
@@ -63,7 +75,10 @@ export class AuthService {
     }
 
     // 2. Verify Hash
-    const isPasswordMatch = await comparePassword(payload.password, employee.passwordHash);
+    const isPasswordMatch = await comparePassword(
+      payload.password,
+      employee.passwordHash,
+    );
     if (!isPasswordMatch) {
       throw new UnauthorizedError("Invalid email or password.");
     }
@@ -98,21 +113,24 @@ export class AuthService {
     if (employee && employee.status === "ACTIVE") {
       const resetToken = crypto.randomBytes(32).toString("hex");
       const expires = new Date(Date.now() + 15 * 60 * 1000); // 15 mins expiry
-      
+
       resetTokens.set(resetToken, { email: payload.email, expires });
-      
+
       // In development, log the reset token for manual testing verification
-      console.log(`[DEV ONLY] Password reset token generated for ${payload.email}: ${resetToken}`);
+      console.log(
+        `[DEV ONLY] Password reset token generated for ${payload.email}: ${resetToken}`,
+      );
     }
 
     return {
-      message: "If the email is registered, you will receive instructions to reset your password.",
+      message:
+        "If the email is registered, you will receive instructions to reset your password.",
     };
   }
 
   async resetPassword(payload: ResetPasswordInput) {
     const record = resetTokens.get(payload.token);
-    
+
     if (!record || record.expires.getTime() < Date.now()) {
       throw new BadRequestError("Reset token is invalid or has expired.");
     }

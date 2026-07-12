@@ -20,13 +20,23 @@ export async function signup(payload: SignupInput): Promise<AuthSession> {
   return authSessionSchema.parse(data.data);
 }
 
-export async function forgotPassword(payload: ForgotPasswordInput): Promise<{ message: string }> {
-  const { data } = await apiClient.post(apiRoutes.auth.forgotPassword.path, payload);
+export async function forgotPassword(
+  payload: ForgotPasswordInput,
+): Promise<{ message: string }> {
+  const { data } = await apiClient.post(
+    apiRoutes.auth.forgotPassword.path,
+    payload,
+  );
   return data;
 }
 
-export async function resetPassword(payload: ResetPasswordInput): Promise<{ message: string }> {
-  const { data } = await apiClient.post(apiRoutes.auth.resetPassword.path, payload);
+export async function resetPassword(
+  payload: ResetPasswordInput,
+): Promise<{ message: string }> {
+  const { data } = await apiClient.post(
+    apiRoutes.auth.resetPassword.path,
+    payload,
+  );
   return data;
 }
 

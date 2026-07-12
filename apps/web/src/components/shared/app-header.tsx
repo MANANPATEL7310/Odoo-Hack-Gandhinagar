@@ -6,7 +6,7 @@ import { useAuthStore } from "@/stores/auth-store";
 
 export function AppHeader() {
   const user = useAuthStore((state) => state.user);
-  const clearSession = useAuthStore((state) => state.clearSession);
+  const logout = useAuthStore((state) => state.logout);
 
   return (
     <header className="surface-card flex flex-col gap-4 p-5 md:flex-row md:items-center md:justify-between">
@@ -20,7 +20,7 @@ export function AppHeader() {
       </div>
       <div className="flex flex-wrap items-center gap-3">
         <ThemeToggle />
-        <Button variant="outline" onClick={clearSession} type="button">
+        <Button variant="outline" onClick={logout} type="button">
           <LogOut className="size-4" />
           <span>Sign out</span>
         </Button>

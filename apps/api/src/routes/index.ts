@@ -8,6 +8,8 @@ import { assetCategoriesRouter } from "../modules/asset-categories/asset-categor
 import { employeesRouter } from "../modules/employees/employees.routes.js";
 import { assetsRouter } from "../modules/assets/assets.routes.js";
 import { notificationRouter } from "../modules/notification/notification.routes.js";
+import { allocationsRouter } from "../modules/allocations/allocations.routes.js";
+import { transferRequestsRouter } from "../modules/allocations/transfer-requests.routes.js";
 
 export const apiRouter = Router();
 
@@ -20,3 +22,5 @@ apiRouter.use("/asset-categories", assetCategoriesRouter);
 apiRouter.use("/employees", employeesRouter);
 apiRouter.use("/assets", assetsRouter);
 apiRouter.use("/notifications", notificationRouter);
+apiRouter.use("/allocations", allocationsRouter);
+apiRouter.use("/transfer-requests", transferRequestsRouter);

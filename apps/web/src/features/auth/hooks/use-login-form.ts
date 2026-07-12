@@ -12,7 +12,7 @@ type LoginFormValues = z.input<typeof loginInputSchema>;
 
 export function useLoginForm() {
   const navigate = useNavigate();
-  const setSession = useAuthStore((state) => state.setSession);
+  const setAuth = useAuthStore((state) => state.setAuth);
 
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginInputSchema),
@@ -25,8 +25,10 @@ export function useLoginForm() {
 
   const mutation = useMutation({
     mutationFn: login,
-    onSuccess: (session) => {
-      setSession(session);
+    onSuccess: (response: Record<string, unknown>) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const res = response as any;
+      setAuth(res.user, res.accessToken);
       toast.success("Signed in. Your dashboard is ready.");
       navigate(appRoutes.dashboard);
     },

@@ -117,7 +117,7 @@ model AssetCategory {
   id          String         @id @default(cuid())
   name        String         @unique
   description String?
-  fieldSchema Json?          // Defines optional fields: array of { name: string, type: 'text' | 'number' | 'date' }
+  fieldSchema Json? // Defines optional fields: array of { name: string, type: 'text' | 'number' | 'date' }
   status      CategoryStatus @default(ACTIVE)
   createdAt   DateTime       @default(now())
   updatedAt   DateTime       @updatedAt
@@ -174,7 +174,7 @@ model Asset {
   isBookable           Boolean     @default(false)
   photoUrls            String[]
   documentUrls         String[]
-  categoryMetadata     Json?       // Dynamic attributes complying with AssetCategory.fieldSchema
+  categoryMetadata     Json? // Dynamic attributes complying with AssetCategory.fieldSchema
   createdAt            DateTime    @default(now())
   updatedAt            DateTime    @updatedAt
 
@@ -205,9 +205,9 @@ model Allocation {
   createdAt          DateTime         @default(now())
   updatedAt          DateTime         @updatedAt
 
-  asset            Asset            @relation(fields: [assetId], references: [id])
-  holderEmployee   Employee?        @relation("AllocationEmployee", fields: [holderEmployeeId], references: [id], onDelete: SetNull)
-  holderDepartment Department?      @relation("AllocationDepartment", fields: [holderDepartmentId], references: [id], onDelete: SetNull)
+  asset            Asset             @relation(fields: [assetId], references: [id])
+  holderEmployee   Employee?         @relation("AllocationEmployee", fields: [holderEmployeeId], references: [id], onDelete: SetNull)
+  holderDepartment Department?       @relation("AllocationDepartment", fields: [holderDepartmentId], references: [id], onDelete: SetNull)
   transferRequests TransferRequest[]
 
   // Note: To enforce that an asset can only have one active allocation,
@@ -234,12 +234,12 @@ model TransferRequest {
   createdAt             DateTime       @default(now())
   updatedAt             DateTime       @updatedAt
 
-  asset             Asset        @relation(fields: [assetId], references: [id])
-  currentAllocation Allocation   @relation(fields: [currentAllocationId], references: [id])
-  requestedBy       Employee     @relation("TransferRequester", fields: [requestedByEmployeeId], references: [id])
-  targetEmployee    Employee?    @relation("TransferTargetEmployee", fields: [targetEmployeeId], references: [id], onDelete: SetNull)
-  targetDepartment  Department?  @relation("TransferTargetDepartment", fields: [targetDepartmentId], references: [id], onDelete: SetNull)
-  decidedBy         Employee?    @relation("TransferDecider", fields: [decidedByEmployeeId], references: [id], onDelete: SetNull)
+  asset             Asset       @relation(fields: [assetId], references: [id])
+  currentAllocation Allocation  @relation(fields: [currentAllocationId], references: [id])
+  requestedBy       Employee    @relation("TransferRequester", fields: [requestedByEmployeeId], references: [id])
+  targetEmployee    Employee?   @relation("TransferTargetEmployee", fields: [targetEmployeeId], references: [id], onDelete: SetNull)
+  targetDepartment  Department? @relation("TransferTargetDepartment", fields: [targetDepartmentId], references: [id], onDelete: SetNull)
+  decidedBy         Employee?   @relation("TransferDecider", fields: [decidedByEmployeeId], references: [id], onDelete: SetNull)
 
   @@index([assetId])
   @@index([status])
@@ -342,7 +342,7 @@ model AuditCycleItem {
 model Notification {
   id                  String   @id @default(cuid())
   recipientEmployeeId String
-  type                String   // Notification classification tag
+  type                String // Notification classification tag
   message             String
   relatedEntityType   String?
   relatedEntityId     String?
@@ -359,7 +359,7 @@ model Notification {
 model ActivityLog {
   id               String   @id @default(cuid())
   actorEmployeeId  String
-  action           String   // Action audit tag
+  action           String // Action audit tag
   targetEntityType String
   targetEntityId   String
   metadata         Json?

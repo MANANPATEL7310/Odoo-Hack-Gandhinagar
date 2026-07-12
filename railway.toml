@@ -1,11 +1,6 @@
 [build]
 builder = "nixpacks"
 
-[phases.install]
-cmds = ["corepack enable", "pnpm install --frozen-lockfile"]
-
-[phases.build]
-cmds = ["pnpm db:generate", "pnpm build --filter @template/api"]
 
 [deploy]
 startCommand = "node apps/api/dist/server.js"

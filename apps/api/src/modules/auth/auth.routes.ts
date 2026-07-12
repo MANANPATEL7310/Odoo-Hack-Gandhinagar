@@ -18,8 +18,12 @@ import {
 
 export const authRouter = createRouter();
 
-// Restrict auth endpoints to a maximum of 10 requests per 15 minutes per IP
-const authRateLimiter = rateLimiter(15 * 60 * 1000, 10);
+// Restrict auth endpoints to a maximum of 10 requests per 15 minutes per IP (1000 in dev/test)
+const isDev =
+  process.env.NODE_ENV === "development" ||
+  !process.env.NODE_ENV ||
+  process.env.NODE_ENV === "test";
+const authRateLimiter = rateLimiter(15 * 60 * 1000, isDev ? 1000 : 10);
 
 authRouter.post(
   "/signup",

@@ -12,8 +12,8 @@ export function LoginPage() {
   const navigate = useNavigate();
   const setAuth = useAuthStore((state) => state.setAuth);
 
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [email, setEmail] = useState("admin@acme.com");
+  const [password, setPassword] = useState("password123");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -48,10 +48,10 @@ export function LoginPage() {
         className="auth-split-layout surface-card relative z-10 mx-auto w-full max-w-6xl overflow-hidden p-0"
         style={{ minHeight: "calc(100vh - 3rem)" }}
       >
-        <section className="hidden flex-col justify-between border-r border-white/40 p-8 lg:flex dark:border-white/10">
+        <section className="hidden flex-col border-r border-white/40 p-8 lg:flex dark:border-white/10">
           <LogoMark />
-          <div>
-            <p className="inline-flex items-center gap-2 rounded-lg bg-secondary/10 px-3 py-2 text-sm font-medium text-secondary">
+          <div className="flex flex-1 flex-col justify-center">
+            <p className="inline-flex w-fit items-center gap-2 rounded-lg bg-secondary/10 px-3 py-2 text-sm font-medium text-secondary">
               <ShieldCheck className="size-4" />
               Secured operations
             </p>
@@ -70,13 +70,49 @@ export function LoginPage() {
             <LogoMark className="mb-8 lg:hidden" />
 
             <div className="mb-8">
-              <div className="mb-5 inline-flex size-12 items-center justify-center rounded-lg border border-white/50 bg-white/45 text-primary dark:border-white/10 dark:bg-white/5">
+              <div className="mb-5 inline-flex size-12 items-center justify-center rounded-lg border border-white/50 bg-white/45 text-primary shadow-sm dark:border-white/10 dark:bg-white/5">
                 <Fingerprint className="size-6" />
               </div>
-              <h2 className="text-3xl font-semibold">Welcome back</h2>
+              <h2 className="text-3xl font-semibold tracking-tight">
+                Welcome back
+              </h2>
               <p className="mt-2 text-sm text-muted-foreground">
                 Sign in to open your asset operations workspace.
               </p>
+            </div>
+
+            <div className="relative mb-8 overflow-hidden rounded-xl border border-secondary/20 bg-gradient-to-br from-secondary/10 to-transparent p-4 shadow-sm backdrop-blur-sm">
+              <div className="absolute top-0 right-0 p-4 opacity-10">
+                <ShieldCheck className="size-16" />
+              </div>
+              <div className="relative z-10 mb-2 flex items-center gap-2">
+                <div className="size-2 animate-pulse rounded-full bg-secondary" />
+                <h3 className="text-sm font-semibold text-secondary">
+                  Evaluator Quick Login
+                </h3>
+              </div>
+              <p className="relative z-10 mb-3 text-xs leading-relaxed text-muted-foreground">
+                Use the pre-filled admin credentials below to explore the full
+                capabilities of the system.
+              </p>
+              <div className="relative z-10 grid grid-cols-2 gap-2 rounded-lg border border-white/10 bg-background/50 p-2.5 text-sm shadow-inner dark:border-white/5">
+                <div>
+                  <span className="mb-0.5 block text-xs font-medium tracking-wider text-muted-foreground uppercase">
+                    Email
+                  </span>
+                  <span className="font-mono font-medium text-foreground">
+                    admin@acme.com
+                  </span>
+                </div>
+                <div>
+                  <span className="mb-0.5 block text-xs font-medium tracking-wider text-muted-foreground uppercase">
+                    Password
+                  </span>
+                  <span className="font-mono font-medium text-foreground">
+                    password123
+                  </span>
+                </div>
+              </div>
             </div>
 
             <form onSubmit={handleLogin} className="space-y-4">

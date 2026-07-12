@@ -34,12 +34,10 @@ export function sendError(
   code = "INTERNAL_ERROR",
   details?: unknown,
 ) {
-  return res
-    .status(status)
-    .json({
-      success: false,
-      error: { code, message, details },
-    } satisfies ApiResponse<never>);
+  return res.status(status).json({
+    success: false,
+    error: { code, message, details },
+  } satisfies ApiResponse<never>);
 }
 
 export function sendNotFound(res: Response, entity = "Resource") {

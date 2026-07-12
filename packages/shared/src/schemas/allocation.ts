@@ -51,3 +51,11 @@ export type Allocation = z.infer<typeof allocationSchema>;
 export type AllocateAssetInput = z.infer<typeof allocateAssetSchema>;
 export type ReturnAssetInput = z.infer<typeof returnAssetSchema>;
 export type TransferAssetInput = z.infer<typeof transferAssetSchema>;
+
+export const rejectTransferRequestSchema = z.object({
+  reason: z.string().min(1, "Reason is required for rejection.").max(500),
+});
+
+export type RejectTransferRequestInput = z.infer<
+  typeof rejectTransferRequestSchema
+>;

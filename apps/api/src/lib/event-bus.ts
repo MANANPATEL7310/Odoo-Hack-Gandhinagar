@@ -99,6 +99,12 @@ export type DomainEvents = {
     raisedById: string;
     currentHolderId?: string;
   };
+  "maintenancerequest.created": {
+    requestId: string;
+    assetId: string;
+    assetTag: string;
+    raisedById: string;
+  };
   "employee.role_changed": {
     employeeId: string;
     newRole: string;

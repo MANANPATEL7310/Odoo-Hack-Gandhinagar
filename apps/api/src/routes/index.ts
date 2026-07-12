@@ -11,6 +11,7 @@ import { notificationRouter } from "../modules/notification/notification.routes.
 import { allocationsRouter } from "../modules/allocations/allocations.routes.js";
 import { transferRequestsRouter } from "../modules/allocations/transfer-requests.routes.js";
 import { bookingsRouter } from "../modules/bookings/bookings.routes.js";
+import { maintenanceRouter } from "../modules/maintenance/maintenance.routes.js";
 
 export const apiRouter = Router();
 
@@ -26,3 +27,4 @@ apiRouter.use("/notifications", notificationRouter);
 apiRouter.use("/allocations", allocationsRouter);
 apiRouter.use("/transfer-requests", transferRequestsRouter);
 apiRouter.use("/bookings", bookingsRouter);
+apiRouter.use("/maintenance-requests", maintenanceRouter);

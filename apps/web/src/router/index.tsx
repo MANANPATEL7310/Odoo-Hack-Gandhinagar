@@ -9,16 +9,7 @@ import { AssetRegistryPage } from "../features/assets/AssetRegistryPage";
 import { LoginPage } from "../features/auth/LoginPage";
 import { SignupPage } from "../features/auth/SignupPage";
 import { ProtectedRoute } from "../components/shared/ProtectedRoute";
-
-// Temporary empty components for unbuilt routes
-const Placeholder = ({ title }: { title: string }) => (
-  <div className="flex h-full items-center justify-center text-muted-foreground">
-    <div className="text-center">
-      <h2 className="text-2xl font-bold text-foreground">{title}</h2>
-      <p className="mt-2">This feature is currently under development.</p>
-    </div>
-  </div>
-);
+import { ModulePlaceholder } from "../components/shared/ModulePlaceholder";
 
 const router = createBrowserRouter([
   {
@@ -47,7 +38,7 @@ const router = createBrowserRouter([
           },
           {
             path: "org-setup",
-            element: <Placeholder title="Org Setup" />,
+            element: <ModulePlaceholder feature="orgSetup" />,
           },
           {
             path: "assets",
@@ -55,23 +46,23 @@ const router = createBrowserRouter([
           },
           {
             path: "allocations",
-            element: <Placeholder title="Allocations" />,
+            element: <ModulePlaceholder feature="allocations" />,
           },
           {
             path: "bookings",
-            element: <Placeholder title="Resource Bookings" />,
+            element: <ModulePlaceholder feature="bookings" />,
           },
           {
             path: "maintenance",
-            element: <Placeholder title="Maintenance Requests" />,
+            element: <ModulePlaceholder feature="maintenance" />,
           },
           {
             path: "audits",
-            element: <Placeholder title="Asset Audits" />,
+            element: <ModulePlaceholder feature="audits" />,
           },
           {
             path: "reports",
-            element: <Placeholder title="Reports & Analytics" />,
+            element: <ModulePlaceholder feature="reports" />,
           },
         ],
       },

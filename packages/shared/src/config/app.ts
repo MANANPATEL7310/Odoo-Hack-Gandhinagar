@@ -1,8 +1,8 @@
 export const appMeta = {
-  name: "Project Template",
+  name: "AssetFlow",
   description:
-    "A reusable React + Express monorepo template for fast product delivery.",
-  supportEmail: "hello@example.com",
+    "A polished asset operations workspace for inventory, bookings, maintenance, and audits.",
+  supportEmail: "ops@assetflow.local",
 } as const;
 
 export const storageKeys = {

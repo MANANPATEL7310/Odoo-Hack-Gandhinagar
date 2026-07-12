@@ -5,6 +5,8 @@ import { api } from "../../lib/api-client";
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
 import { Label } from "../../components/ui/label";
+import { LogoMark } from "../../components/shared/logo-mark";
+import { ArrowRight, Boxes, Fingerprint, ShieldCheck } from "lucide-react";
 
 export function LoginPage() {
   const navigate = useNavigate();
@@ -37,118 +39,130 @@ export function LoginPage() {
   };
 
   return (
-    <div className="relative flex min-h-screen items-center justify-center overflow-hidden">
-      {/* Background decoration */}
-      <div className="absolute inset-0 z-0 bg-background" />
+    <div className="auth-backdrop relative min-h-screen overflow-hidden px-4 py-6">
+      <div className="fine-grid pointer-events-none absolute inset-0 opacity-55" />
+
       <div
-        className="absolute z-0 rounded-full bg-primary/20"
-        style={{
-          top: "-10%",
-          left: "-10%",
-          height: "50vh",
-          width: "50vh",
-          filter: "blur(100px)",
-        }}
-      />
-      <div
-        className="absolute z-0 rounded-full bg-primary/20"
-        style={{
-          top: "60%",
-          right: "-10%",
-          height: "40vh",
-          width: "40vh",
-          filter: "blur(100px)",
-        }}
-      />
-
-      {/* Login Card */}
-      <div className="surface-card relative z-10 w-full max-w-md border-border/50 p-8 shadow-2xl backdrop-blur-2xl">
-        <div className="mb-8 text-center">
-          <div className="mb-4 inline-flex size-12 items-center justify-center rounded-xl bg-primary/10">
-            <svg
-              className="size-6 text-primary"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M12 11c0 3.517-1.009 6.799-2.753 9.571m-3.44-2.04l.054-.09A13.916 13.916 0 008 11a4 4 0 118 0c0 1.017-.07 2.019-.203 3m-2.118 6.844A21.88 21.88 0 0015.171 17m3.839 1.132c.645-2.266.99-4.659.99-7.132A8 8 0 008 4.07M3 15.364c.64-1.319 1-2.8 1-4.364 0-1.457.39-2.823 1.07-4"
-              />
-            </svg>
+        className="auth-split-layout surface-card relative z-10 mx-auto w-full max-w-6xl overflow-hidden p-0"
+        style={{ minHeight: "calc(100vh - 3rem)" }}
+      >
+        <section className="hidden flex-col justify-between border-r border-white/40 p-8 lg:flex dark:border-white/10">
+          <LogoMark />
+          <div>
+            <p className="inline-flex items-center gap-2 rounded-lg bg-secondary/10 px-3 py-2 text-sm font-medium text-secondary">
+              <ShieldCheck className="size-4" />
+              Secured operations
+            </p>
+            <h1 className="mt-6 max-w-xl text-5xl leading-tight font-semibold">
+              Track every device from request to return.
+            </h1>
+            <p className="mt-5 max-w-lg text-base leading-7 text-muted-foreground">
+              AssetFlow keeps assignments, bookings, maintenance, and audits
+              close to the teams that need them.
+            </p>
           </div>
-          <h1 className="text-2xl font-bold tracking-tight">
-            Welcome to AssetFlow
-          </h1>
-          <p className="mt-2 text-sm text-muted-foreground">
-            Sign in to your organization to continue
-          </p>
-        </div>
+          <div className="grid grid-cols-3 gap-3">
+            {[
+              ["3", "Assets live"],
+              ["0", "Overdue"],
+              ["98%", "Health"],
+            ].map(([value, label]) => (
+              <div
+                key={label}
+                className="rounded-lg border border-white/50 bg-white/35 p-4 dark:border-white/10 dark:bg-white/5"
+              >
+                <p className="text-2xl font-semibold">{value}</p>
+                <p className="mt-1 text-xs text-muted-foreground">{label}</p>
+              </div>
+            ))}
+          </div>
+        </section>
 
-        <form onSubmit={handleLogin} className="space-y-4">
-          {error && (
-            <div className="text-destructive bg-destructive/10 border-destructive/20 rounded-md border p-3 text-sm">
-              {error}
+        <section className="flex items-center justify-center p-5 sm:p-8">
+          <div className="w-full max-w-md">
+            <LogoMark className="mb-8 lg:hidden" />
+
+            <div className="mb-8">
+              <div className="mb-5 inline-flex size-12 items-center justify-center rounded-lg border border-white/50 bg-white/45 text-primary dark:border-white/10 dark:bg-white/5">
+                <Fingerprint className="size-6" />
+              </div>
+              <h2 className="text-3xl font-semibold">Welcome back</h2>
+              <p className="mt-2 text-sm text-muted-foreground">
+                Sign in to open your asset operations workspace.
+              </p>
             </div>
-          )}
 
-          <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
-            <Input
-              id="email"
-              type="email"
-              placeholder="alice@acme.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              className="bg-surface/50"
-            />
-          </div>
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <Label htmlFor="password">Password</Label>
-              <a href="#" className="text-xs text-primary hover:underline">
-                Forgot password?
-              </a>
+            <form onSubmit={handleLogin} className="space-y-4">
+              {error && (
+                <div className="rounded-lg border border-danger/20 bg-danger/10 p-3 text-sm text-danger">
+                  {error}
+                </div>
+              )}
+
+              <div className="space-y-2">
+                <Label htmlFor="email">Email</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="alice@acme.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="password">Password</Label>
+                  <a href="#" className="text-xs text-primary hover:underline">
+                    Forgot password?
+                  </a>
+                </div>
+                <Input
+                  id="password"
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                />
+              </div>
+
+              <Button
+                type="submit"
+                className="w-full shadow-lg shadow-primary/20"
+                disabled={loading}
+              >
+                {loading ? (
+                  <div className="size-5 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                ) : (
+                  <>
+                    <span>Sign in</span>
+                    <ArrowRight className="size-4" />
+                  </>
+                )}
+              </Button>
+            </form>
+
+            <div className="mt-6 flex items-center justify-between gap-3 text-sm">
+              <span className="text-muted-foreground">
+                Don&apos;t have an account?
+              </span>
+              <Link to="/signup" className="font-medium text-primary">
+                Sign up
+              </Link>
             </div>
-            <Input
-              id="password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              className="bg-surface/50"
-            />
+
+            <div className="mt-6 rounded-lg border border-white/50 bg-white/35 p-4 text-sm text-muted-foreground dark:border-white/10 dark:bg-white/5">
+              <div className="mb-2 flex items-center gap-2 font-medium text-foreground">
+                <Boxes className="size-4 text-primary" />
+                Demo access
+              </div>
+              <p className="font-mono text-xs">alice@acme.com / password123</p>
+              <p className="mt-1 font-mono text-xs">
+                bob@acme.com / password123
+              </p>
+            </div>
           </div>
-
-          <Button type="submit" className="w-full" disabled={loading}>
-            {loading ? (
-              <div className="border-primary-foreground size-5 animate-spin rounded-full border-2 border-t-transparent" />
-            ) : (
-              "Sign In"
-            )}
-          </Button>
-        </form>
-
-        <div className="mt-6 text-center text-sm">
-          <span className="text-muted-foreground">Don't have an account? </span>
-          <Link
-            to="/signup"
-            className="font-medium text-primary hover:underline"
-          >
-            Sign up
-          </Link>
-        </div>
-
-        <div className="mt-6 text-center text-sm text-muted-foreground">
-          Mock Accounts (Try these emails):
-          <br />
-          <span className="font-mono text-xs">alice@acme.com (Admin)</span>
-          <br />
-          <span className="font-mono text-xs">bob@acme.com (Asset Mgr)</span>
-        </div>
+        </section>
       </div>
     </div>
   );

@@ -1,4 +1,4 @@
-import axios, { AxiosError, InternalAxiosRequestConfig } from "axios";
+import axios, { InternalAxiosRequestConfig } from "axios";
 import { useAuthStore } from "../stores/auth-store";
 import { useMockDb } from "../stores/mock-db";
 
@@ -25,6 +25,11 @@ api.interceptors.response.use(
     // Only mock if it's hitting our backend API base
     if (!response.config.url?.startsWith("/api/v1")) return response;
 
+    // If Vite serves index.html (SPA fallback) for an API route, the backend is not running.
+    if (typeof response.data === "string" && response.data.includes("<html")) {
+      return Promise.reject({ isMockTrigger: true, config: response.config });
+    }
+
     await delay(500); // Simulated latency
 
     // In a real environment with the backend running, we might disable this block.
@@ -32,10 +37,17 @@ api.interceptors.response.use(
     // This is a minimal mock for GET /auth/me to demonstrate the concept.
     return response;
   },
-  async (error: AxiosError) => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async (error: any) => {
     // If the actual backend is not running, Axios will throw a Network Error.
     // We catch it and use our mock DB.
-    if (error.message === "Network Error" || error.code === "ERR_NETWORK") {
+    if (
+      error.isMockTrigger ||
+      error.message === "Network Error" ||
+      error.code === "ERR_NETWORK" ||
+      error.response?.status === 504 ||
+      error.response?.status === 404
+    ) {
       await delay(500);
       const url = error.config?.url;
       const method = error.config?.method?.toUpperCase();

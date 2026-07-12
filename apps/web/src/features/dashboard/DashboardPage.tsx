@@ -1,6 +1,20 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { api } from "../../lib/api-client";
-import { Package, ArrowRightLeft, CalendarClock, PenTool } from "lucide-react";
+import {
+  Activity,
+  ArrowRightLeft,
+  CalendarClock,
+  CheckCircle2,
+  Clock3,
+  Gauge,
+  Laptop,
+  Package,
+  PenTool,
+  Radar,
+  ShieldCheck,
+  TrendingUp,
+  Wrench,
+} from "lucide-react";
 
 interface KPIResponse {
   assetsAvailable: number;
@@ -29,72 +43,271 @@ export function DashboardPage() {
     fetchDashboard();
   }, []);
 
+  const totalTrackedAssets =
+    (kpis?.assetsAvailable ?? 0) + (kpis?.assetsAllocated ?? 0);
+  const utilization = totalTrackedAssets
+    ? Math.round(((kpis?.assetsAllocated ?? 0) / totalTrackedAssets) * 100)
+    : 0;
+
+  const statCards = useMemo(
+    () => [
+      {
+        label: "Assets Available",
+        value: kpis?.assetsAvailable ?? 0,
+        helper: "Ready to assign or book",
+        icon: Package,
+        tone: "text-secondary",
+        bar: totalTrackedAssets
+          ? Math.round(
+              ((kpis?.assetsAvailable ?? 0) / totalTrackedAssets) * 100,
+            )
+          : 0,
+      },
+      {
+        label: "Allocated Assets",
+        value: kpis?.assetsAllocated ?? 0,
+        helper: `${utilization}% utilization`,
+        icon: ArrowRightLeft,
+        tone: "text-primary",
+        bar: utilization,
+      },
+      {
+        label: "Active Bookings",
+        value: kpis?.activeBookings ?? 0,
+        helper: "Room and shared gear",
+        icon: CalendarClock,
+        tone: "text-warning",
+        bar: (kpis?.activeBookings ?? 0) > 0 ? 66 : 12,
+      },
+      {
+        label: "Maintenance Today",
+        value: kpis?.maintenanceToday ?? 0,
+        helper: "Service queue load",
+        icon: PenTool,
+        tone: "text-danger",
+        bar: (kpis?.maintenanceToday ?? 0) > 0 ? 48 : 8,
+      },
+    ],
+    [kpis, totalTrackedAssets, utilization],
+  );
+
+  const readinessRows = [
+    {
+      label: "Allocation capacity",
+      value: `${100 - utilization}%`,
+      width: Math.max(18, 100 - utilization),
+      tone: "bg-secondary",
+    },
+    {
+      label: "Transfer queue",
+      value: `${kpis?.pendingTransfers ?? 0} pending`,
+      width: (kpis?.pendingTransfers ?? 0) > 0 ? 58 : 14,
+      tone: "bg-primary",
+    },
+    {
+      label: "Returns ahead",
+      value: `${kpis?.upcomingReturns ?? 0} due`,
+      width: (kpis?.upcomingReturns ?? 0) > 0 ? 42 : 10,
+      tone: "bg-warning",
+    },
+  ];
+
+  const activityItems = [
+    {
+      title: "MacBook Pro 16 assigned",
+      meta: "Engineering inventory updated",
+      icon: Laptop,
+      tone: "text-primary",
+    },
+    {
+      title: "Projector X1 is bookable",
+      meta: "Conference assets marked ready",
+      icon: CheckCircle2,
+      tone: "text-secondary",
+    },
+    {
+      title: "Maintenance window clear",
+      meta: "No service tickets scheduled today",
+      icon: Wrench,
+      tone: "text-warning",
+    },
+  ];
+
+  const insightCards = [
+    {
+      label: "Overdue items",
+      value: "0",
+      icon: Clock3,
+    },
+    {
+      label: "Active signals",
+      value: "3",
+      icon: Activity,
+    },
+    {
+      label: "Trend",
+      value: "Up",
+      icon: TrendingUp,
+    },
+  ];
+
   if (loading) {
     return (
       <div
-        className="flex items-center justify-center"
+        className="surface-card flex items-center justify-center"
         style={{ height: "50vh" }}
       >
-        <div className="size-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
+        <div className="size-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="page-title">Dashboard</h1>
-        <p className="page-copy mt-2">Overview of your asset ecosystem.</p>
+    <div className="space-y-5">
+      <section className="surface-card overflow-hidden p-6 md:p-8">
+        <div className="dash-hero-grid gap-6 lg:items-end">
+          <div>
+            <p className="inline-flex items-center gap-2 rounded-lg border border-white/50 bg-white/45 px-3 py-1 text-xs font-semibold text-primary uppercase backdrop-blur-xl dark:border-white/10 dark:bg-white/5">
+              <Radar className="size-3.5" />
+              Live fleet overview
+            </p>
+            <h2 className="mt-5 max-w-3xl text-4xl leading-tight font-semibold md:text-5xl">
+              Every asset, booking, and handoff in one glassy command view.
+            </h2>
+            <p className="mt-4 max-w-2xl text-sm leading-6 text-muted-foreground md:text-base">
+              Monitor availability, keep allocations moving, and spot work that
+              needs attention before it slows down your teams.
+            </p>
+          </div>
+
+          <div className="rounded-lg border border-white/50 bg-white/45 p-4 backdrop-blur-xl dark:border-white/10 dark:bg-white/5">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs font-semibold tracking-widest text-muted-foreground uppercase">
+                  Fleet utilization
+                </p>
+                <p className="mt-2 text-4xl font-semibold">{utilization}%</p>
+              </div>
+              <Gauge className="size-10 text-primary" />
+            </div>
+            <div className="mt-5 h-2 overflow-hidden rounded-full bg-white/70 dark:bg-white/10">
+              <div
+                className="h-full rounded-full bg-primary"
+                style={{ width: `${Math.max(8, utilization)}%` }}
+              />
+            </div>
+            <p className="mt-3 text-xs text-muted-foreground">
+              {totalTrackedAssets} assets currently tracked in the workspace.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        {statCards.map((card) => {
+          const Icon = card.icon;
+          return (
+            <div key={card.label} className="surface-card p-5">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">
+                    {card.label}
+                  </p>
+                  <p className="mt-3 text-4xl font-semibold">{card.value}</p>
+                </div>
+                <span className="flex size-11 items-center justify-center rounded-lg border border-white/50 bg-white/45 dark:border-white/10 dark:bg-white/5">
+                  <Icon className={`size-5 ${card.tone}`} />
+                </span>
+              </div>
+              <div className="mt-5 h-1.5 overflow-hidden rounded-full bg-white/70 dark:bg-white/10">
+                <div
+                  className="h-full rounded-full bg-current text-primary"
+                  style={{ width: `${Math.max(8, card.bar)}%` }}
+                />
+              </div>
+              <p className="mt-3 text-xs text-muted-foreground">
+                {card.helper}
+              </p>
+            </div>
+          );
+        })}
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        {/* KPI Cards */}
-        <div className="surface-card flex flex-col gap-2 p-6">
-          <div className="flex items-center gap-2 text-muted-foreground">
-            <Package className="size-4" />
-            <h3 className="text-sm font-medium">Assets Available</h3>
+      <div className="dash-content-grid gap-5">
+        <section className="surface-card p-6">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="text-xs font-semibold tracking-widest text-primary uppercase">
+                Readiness
+              </p>
+              <h3 className="mt-1 text-xl font-semibold">Operations health</h3>
+            </div>
+            <span className="inline-flex w-fit items-center gap-2 rounded-lg bg-secondary/10 px-3 py-2 text-sm font-medium text-secondary">
+              <ShieldCheck className="size-4" />
+              Clear to operate
+            </span>
           </div>
-          <p className="text-3xl font-bold">{kpis?.assetsAvailable || 0}</p>
-        </div>
 
-        <div className="surface-card flex flex-col gap-2 p-6">
-          <div className="flex items-center gap-2 text-muted-foreground">
-            <ArrowRightLeft className="size-4" />
-            <h3 className="text-sm font-medium">Allocated Assets</h3>
+          <div className="mt-6 space-y-5">
+            {readinessRows.map((row) => (
+              <div key={row.label}>
+                <div className="mb-2 flex items-center justify-between text-sm">
+                  <span className="font-medium">{row.label}</span>
+                  <span className="text-muted-foreground">{row.value}</span>
+                </div>
+                <div className="h-3 overflow-hidden rounded-full bg-white/70 dark:bg-white/10">
+                  <div
+                    className={`h-full rounded-full ${row.tone}`}
+                    style={{ width: `${row.width}%` }}
+                  />
+                </div>
+              </div>
+            ))}
           </div>
-          <p className="text-3xl font-bold">{kpis?.assetsAllocated || 0}</p>
-        </div>
 
-        <div className="surface-card flex flex-col gap-2 p-6">
-          <div className="flex items-center gap-2 text-muted-foreground">
-            <CalendarClock className="size-4" />
-            <h3 className="text-sm font-medium">Active Bookings</h3>
+          <div className="mt-6 grid gap-3 sm:grid-cols-3">
+            {insightCards.map((item) => {
+              const Icon = item.icon;
+              return (
+                <div
+                  key={item.label}
+                  className="rounded-lg border border-white/50 bg-white/35 p-4 dark:border-white/10 dark:bg-white/5"
+                >
+                  <Icon className="size-4 text-primary" />
+                  <p className="mt-3 text-2xl font-semibold">{item.value}</p>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    {item.label}
+                  </p>
+                </div>
+              );
+            })}
           </div>
-          <p className="text-3xl font-bold">{kpis?.activeBookings || 0}</p>
-        </div>
+        </section>
 
-        <div className="surface-card flex flex-col gap-2 p-6">
-          <div className="flex items-center gap-2 text-muted-foreground">
-            <PenTool className="size-4" />
-            <h3 className="text-sm font-medium">Maintenance Today</h3>
+        <section className="surface-card p-6">
+          <p className="text-xs font-semibold tracking-widest text-primary uppercase">
+            Activity
+          </p>
+          <h3 className="mt-1 text-xl font-semibold">Recent movement</h3>
+          <div className="mt-6 space-y-4">
+            {activityItems.map((item) => {
+              const Icon = item.icon;
+              return (
+                <div key={item.title} className="flex gap-3">
+                  <span className="flex size-10 shrink-0 items-center justify-center rounded-lg border border-white/50 bg-white/40 dark:border-white/10 dark:bg-white/5">
+                    <Icon className={`size-4 ${item.tone}`} />
+                  </span>
+                  <div className="min-w-0 border-b border-white/40 pb-4 last:border-0 last:pb-0 dark:border-white/10">
+                    <p className="font-medium">{item.title}</p>
+                    <p className="mt-1 text-sm text-muted-foreground">
+                      {item.meta}
+                    </p>
+                  </div>
+                </div>
+              );
+            })}
           </div>
-          <p className="text-3xl font-bold">{kpis?.maintenanceToday || 0}</p>
-        </div>
-      </div>
-
-      <div className="grid gap-6 md:grid-cols-2">
-        <div className="surface-card min-h-75 p-6">
-          <h3 className="mb-4 text-lg font-semibold">Overdue Items</h3>
-          <div className="flex h-50 items-center justify-center rounded-lg border border-dashed text-sm text-muted-foreground">
-            No overdue items currently.
-          </div>
-        </div>
-        <div className="surface-card min-h-75 p-6">
-          <h3 className="mb-4 text-lg font-semibold">Recent Activity</h3>
-          <div className="flex h-50 items-center justify-center rounded-lg border border-dashed text-sm text-muted-foreground">
-            No recent activity.
-          </div>
-        </div>
+        </section>
       </div>
     </div>
   );

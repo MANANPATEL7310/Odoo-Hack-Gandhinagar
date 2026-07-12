@@ -1,5 +1,6 @@
 import type { NextFunction, Request, Response } from "express";
 import jwt from "jsonwebtoken";
+import type { Role } from "@prisma/client";
 import { env } from "../config/env.js";
 import { httpStatus } from "../constants/http.js";
 
@@ -7,7 +8,7 @@ type JwtPayload = {
   sub: string;
   email: string;
   name: string;
-  role: "admin" | "member";
+  role: Role;
 };
 
 export function requireAuth(req: Request, res: Response, next: NextFunction) {

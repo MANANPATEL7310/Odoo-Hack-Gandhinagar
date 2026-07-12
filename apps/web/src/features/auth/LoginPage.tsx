@@ -29,9 +29,13 @@ export function LoginPage() {
       setAuth(user, accessToken);
       navigate("/app/dashboard", { replace: true });
     } catch (err: unknown) {
-      const errObj = err as { response?: { data?: { error?: string } } };
+      const errObj = err as {
+        response?: { data?: { error?: { message?: string } | string } };
+      };
+      const apiError = errObj.response?.data?.error;
       setError(
-        errObj.response?.data?.error || "Failed to login. Please try again.",
+        (typeof apiError === "object" ? apiError?.message : apiError) ||
+          "Failed to login. Please try again.",
       );
     } finally {
       setLoading(false);

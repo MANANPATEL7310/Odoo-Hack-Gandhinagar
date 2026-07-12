@@ -37,6 +37,16 @@ import {
 } from "../../components/ui/select";
 import { DatePicker } from "../../components/ui/date-picker";
 
+async function fetchAuditPageData() {
+  const [auditsData, departmentsData, employeesData] = await Promise.all([
+    getAuditsRepository().listAuditCycles(),
+    getOrgRepository().listDepartments(),
+    getOrgRepository().listEmployees(),
+  ]);
+
+  return { auditsData, departmentsData, employeesData };
+}
+
 export function AuditsPage() {
   const [audits, setAudits] = useState<AuditCycle[]>([]);
   const [departments, setDepartments] = useState<Department[]>([]);
@@ -47,23 +57,32 @@ export function AuditsPage() {
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
 
-  useEffect(() => {
-    const loadData = async () => {
-      try {
-        const [auditsData, departmentsData, employeesData] = await Promise.all([
-          getAuditsRepository().listAuditCycles(),
-          getOrgRepository().listDepartments(),
-          getOrgRepository().listEmployees(),
-        ]);
-        setAudits(auditsData);
-        setDepartments(departmentsData);
-        setEmployees(employeesData);
-      } catch (err) {
-        console.error(err);
-      }
-    };
+  const applyPageData = ({
+    auditsData,
+    departmentsData,
+    employeesData,
+  }: Awaited<ReturnType<typeof fetchAuditPageData>>) => {
+    setAudits(auditsData);
+    setDepartments(departmentsData);
+    setEmployees(employeesData);
+  };
 
-    loadData();
+  useEffect(() => {
+    let isMounted = true;
+
+    fetchAuditPageData()
+      .then((pageData) => {
+        if (isMounted) {
+          applyPageData(pageData);
+        }
+      })
+      .catch((err: unknown) => {
+        console.error(err);
+      });
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   const refreshData = async () => {
@@ -100,7 +119,7 @@ export function AuditsPage() {
               });
               resetCreateForm();
               setIsCreateOpen(false);
-              await loadData();
+              applyPageData(await fetchAuditPageData());
             }}
           >
             <div className="space-y-2">

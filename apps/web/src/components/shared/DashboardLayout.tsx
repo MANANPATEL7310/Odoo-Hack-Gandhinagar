@@ -103,8 +103,6 @@ export function DashboardLayout() {
 
   return (
     <div className="relative min-h-screen overflow-hidden">
-      <div className="fine-grid pointer-events-none fixed inset-0 -z-10 opacity-50" />
-
       <div className="dashboard-shell">
         {/* SIDEBAR ON THE LEFT */}
         <aside

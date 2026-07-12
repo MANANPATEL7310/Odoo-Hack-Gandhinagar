@@ -2,8 +2,13 @@ import { useEffect, useState } from "react";
 import {
   getMaintenanceRepository,
   getAssetsRepository,
+  getOrgRepository,
 } from "@/services/data/repositories";
-import type { MaintenanceRequest, Asset } from "@/services/data/types/domain";
+import type {
+  MaintenanceRequest,
+  Asset,
+  Employee,
+} from "@/services/data/types/domain";
 import { Button } from "../../components/ui/button";
 import {
   Table,
@@ -22,21 +27,26 @@ export function MaintenancePage() {
     MaintenanceRequest[]
   >([]);
   const [assets, setAssets] = useState<Asset[]>([]);
+  const [employees, setEmployees] = useState<Employee[]>([]);
   const [isFormOpen, setIsFormOpen] = useState(false);
 
   useEffect(() => {
     async function loadData() {
       try {
-        const [reqsData, assetsData] = await Promise.all([
+        const [reqsData, assetsData, employeesData] = await Promise.all([
           getMaintenanceRepository()
             .listMaintenanceRequests()
             .catch(() => []),
           getAssetsRepository()
             .listAssets()
             .catch(() => []),
+          getOrgRepository()
+            .listEmployees()
+            .catch(() => []),
         ]);
         setMaintenanceRequests(reqsData);
         setAssets(assetsData);
+        setEmployees(employeesData);
       } catch (err) {
         console.error(err);
       }
@@ -44,12 +54,28 @@ export function MaintenancePage() {
     loadData();
   }, []);
 
+  const refreshData = async () => {
+    const data = await getMaintenanceRepository()
+      .listMaintenanceRequests()
+      .catch(() => []);
+    setMaintenanceRequests(data);
+  };
+
   return (
     <div className="space-y-6 p-2 lg:p-0">
       <MaintenanceFormDialog
         isOpen={isFormOpen}
         onClose={() => setIsFormOpen(false)}
         assets={assets}
+        employees={employees}
+        onSubmit={async (payload) => {
+          try {
+            await getMaintenanceRepository().createMaintenanceRequest(payload);
+            await refreshData();
+          } catch (e) {
+            console.error("Failed to report issue", e);
+          }
+        }}
       />
 
       <div className="flex items-end justify-between">
@@ -84,7 +110,9 @@ export function MaintenancePage() {
             <TableBody>
               {maintenanceRequests.map((mr) => {
                 const asset = assets.find((x) => x.id === mr.assetId);
-                const userName = "Employee"; // Mock until we have employees repository
+                const userName =
+                  employees.find((e) => e.id === mr.reportedByEmployeeId)
+                    ?.name || "Unknown";
 
                 let badgeVariant: "default" | "success" | "warning" = "default";
                 if (mr.status === "PENDING") badgeVariant = "default";
@@ -106,7 +134,18 @@ export function MaintenancePage() {
                     </TableCell>
                     <TableCell className="text-right">
                       {mr.status === "PENDING" && (
-                        <Button size="sm" variant="outline">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={async () => {
+                            try {
+                              await getMaintenanceRepository().startWork(mr.id);
+                              await refreshData();
+                            } catch (e) {
+                              console.error("Failed to start work", e);
+                            }
+                          }}
+                        >
                           Start Work
                         </Button>
                       )}
@@ -114,6 +153,16 @@ export function MaintenancePage() {
                         <Button
                           size="sm"
                           className="bg-primary text-white hover:bg-primary/90"
+                          onClick={async () => {
+                            try {
+                              await getMaintenanceRepository().resolveIssue(
+                                mr.id,
+                              );
+                              await refreshData();
+                            } catch (e) {
+                              console.error("Failed to resolve issue", e);
+                            }
+                          }}
                         >
                           Resolve
                         </Button>

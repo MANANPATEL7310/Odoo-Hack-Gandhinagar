@@ -3,7 +3,8 @@ import {
   getBookingsRepository,
   getAssetsRepository,
 } from "@/services/data/repositories";
-import type { Booking, Asset } from "@/services/data/types/domain";
+import type { Booking, Asset, Employee } from "@/services/data/types/domain";
+import { getOrgRepository } from "@/services/data/repositories";
 import { Button } from "../../components/ui/button";
 import {
   Table,
@@ -20,27 +21,39 @@ import { BookingFormDialog } from "./BookingFormDialog";
 export function BookingsPage() {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [assets, setAssets] = useState<Asset[]>([]);
+  const [employees, setEmployees] = useState<Employee[]>([]);
   const [isFormOpen, setIsFormOpen] = useState(false);
 
   useEffect(() => {
     async function loadData() {
       try {
-        const [bookingsData, assetsData] = await Promise.all([
+        const [bookingsData, assetsData, employeesData] = await Promise.all([
           getBookingsRepository()
             .listBookings()
             .catch(() => []),
           getAssetsRepository()
             .listAssets()
             .catch(() => []),
+          getOrgRepository()
+            .listEmployees()
+            .catch(() => []),
         ]);
         setBookings(bookingsData);
         setAssets(assetsData);
+        setEmployees(employeesData);
       } catch (err) {
         console.error(err);
       }
     }
     loadData();
   }, []);
+
+  const refreshData = async () => {
+    const data = await getBookingsRepository()
+      .listBookings()
+      .catch(() => []);
+    setBookings(data);
+  };
 
   const bookableAssets = assets.filter((a) => a.isBookable);
 
@@ -50,10 +63,14 @@ export function BookingsPage() {
         isOpen={isFormOpen}
         onClose={() => setIsFormOpen(false)}
         assets={bookableAssets}
-        employees={[]}
+        employees={employees}
         onSubmit={async (payload) => {
-          console.log("Submit booking", payload);
-          // In real implementation, call repository
+          try {
+            await getBookingsRepository().createBooking(payload);
+            await refreshData();
+          } catch (e) {
+            console.error("Failed to submit booking", e);
+          }
         }}
       />
 
@@ -90,7 +107,9 @@ export function BookingsPage() {
             <TableBody>
               {bookings.map((b) => {
                 const asset = assets.find((x) => x.id === b.resourceAssetId);
-                const userName = "Employee";
+                const userName =
+                  employees.find((e) => e.id === b.bookedByEmployeeId)?.name ||
+                  "Unknown";
 
                 let badgeVariant:
                   | "default"
@@ -122,19 +141,52 @@ export function BookingsPage() {
                             variant="ghost"
                             size="sm"
                             className="text-danger hover:bg-danger/10 hover:text-danger"
+                            onClick={async () => {
+                              try {
+                                await getBookingsRepository().cancelBooking(
+                                  b.id,
+                                );
+                                await refreshData();
+                              } catch (e) {
+                                console.error("Failed to cancel", e);
+                              }
+                            }}
                           >
                             Cancel
                           </Button>
                           <Button
                             size="sm"
                             className="bg-primary text-white hover:bg-primary/90"
+                            onClick={async () => {
+                              try {
+                                await getBookingsRepository().markBookingOngoing(
+                                  b.id,
+                                );
+                                await refreshData();
+                              } catch (e) {
+                                console.error("Failed to start", e);
+                              }
+                            }}
                           >
                             Start
                           </Button>
                         </div>
                       )}
                       {b.status === "ONGOING" && (
-                        <Button size="sm" variant="outline">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={async () => {
+                            try {
+                              await getBookingsRepository().markBookingCompleted(
+                                b.id,
+                              );
+                              await refreshData();
+                            } catch (e) {
+                              console.error("Failed to end", e);
+                            }
+                          }}
+                        >
                           End Booking
                         </Button>
                       )}

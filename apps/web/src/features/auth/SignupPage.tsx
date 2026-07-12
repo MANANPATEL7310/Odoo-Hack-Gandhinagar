@@ -52,8 +52,6 @@ export function SignupPage() {
 
   return (
     <div className="auth-backdrop relative min-h-screen overflow-hidden px-4 py-6">
-      <div className="fine-grid pointer-events-none absolute inset-0 opacity-55" />
-
       <div
         className="auth-split-layout surface-card relative z-10 mx-auto w-full max-w-6xl overflow-hidden p-0"
         style={{ minHeight: "calc(100vh - 3rem)" }}

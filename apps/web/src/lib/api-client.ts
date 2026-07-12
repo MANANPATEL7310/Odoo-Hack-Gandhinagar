@@ -1,8 +1,9 @@
 import axios, { InternalAxiosRequestConfig } from "axios";
 import { useAuthStore } from "../stores/auth-store";
+import { env } from "@/config/env";
 
 export const api = axios.create({
-  baseURL: "/api/v1", // Standard prefix per API design
+  baseURL: env.VITE_API_URL,
   headers: {
     "Content-Type": "application/json",
   },

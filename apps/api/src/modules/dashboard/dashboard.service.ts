@@ -22,7 +22,7 @@ export async function getDashboardData(currentUser: {
     currentUser.role === Role.ASSET_MANAGER
   ) {
     const [
-      totalAssets,
+      _totalAssets,
       allocatedAssets,
       availableAssets,
       maintenanceAssets,
@@ -38,12 +38,12 @@ export async function getDashboardData(currentUser: {
     ]);
 
     kpis = {
-      totalAssets,
-      allocatedAssets,
-      availableAssets,
-      maintenanceAssets,
+      assetsAvailable: availableAssets,
+      assetsAllocated: allocatedAssets,
+      maintenanceToday: maintenanceAssets,
+      activeBookings: 0, // Would need a count of ONGOING bookings
       pendingTransfers,
-      openAudits,
+      upcomingReturns: openAudits, // Repurpose until frontend is updated
     };
   } else if (currentUser.role === Role.DEPARTMENT_HEAD) {
     // Get department ID
@@ -94,10 +94,12 @@ export async function getDashboardData(currentUser: {
     ]);
 
     kpis = {
-      totalAssets,
-      activeAllocations,
+      assetsAvailable: totalAssets,
+      assetsAllocated: activeAllocations,
+      maintenanceToday: activeMaintenance,
+      activeBookings: 0,
       pendingTransfers,
-      activeMaintenance,
+      upcomingReturns: 0,
     };
   } else {
     // Employee Role
@@ -142,10 +144,12 @@ export async function getDashboardData(currentUser: {
     ]);
 
     kpis = {
-      activeAllocations,
+      assetsAvailable: activeAllocations,
+      assetsAllocated: activeMaintenance,
+      maintenanceToday: activeMaintenance,
+      activeBookings: upcomingBookings,
       pendingTransfers,
-      upcomingBookings,
-      activeMaintenance,
+      upcomingReturns: upcomingBookings,
     };
   }
 

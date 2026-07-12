@@ -12,18 +12,25 @@ import {
 import { Textarea } from "../../components/ui/textarea";
 import { X } from "lucide-react";
 
+import type { CreateMaintenanceRequestInput } from "@/services/data/types/domain";
+
 interface MaintenanceFormDialogProps {
   isOpen: boolean;
   onClose: () => void;
   assets: { id: string; name: string }[];
+  employees: { id: string; name: string }[];
+  onSubmit: (payload: CreateMaintenanceRequestInput) => Promise<void>;
 }
 
 export function MaintenanceFormDialog({
   isOpen,
   onClose,
   assets,
+  employees,
+  onSubmit,
 }: MaintenanceFormDialogProps) {
   const [assetId, setAssetId] = useState("");
+  const [employeeId, setEmployeeId] = useState("");
   const [description, setDescription] = useState("");
   const [estimatedCost, setEstimatedCost] = useState("");
 
@@ -45,8 +52,14 @@ export function MaintenanceFormDialog({
 
         <form
           className="space-y-4"
-          onSubmit={(e) => {
+          onSubmit={async (e) => {
             e.preventDefault();
+            await onSubmit({
+              assetId,
+              reportedByEmployeeId: employeeId,
+              issueDescription: description,
+              priority: "MEDIUM",
+            });
             onClose();
           }}
         >
@@ -60,6 +73,22 @@ export function MaintenanceFormDialog({
                 {assets.map((a) => (
                   <SelectItem key={a.id} value={a.id}>
                     {a.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2">
+            <Label>Reported By (Employee)</Label>
+            <Select value={employeeId} onValueChange={setEmployeeId} required>
+              <SelectTrigger>
+                <SelectValue placeholder="Select employee..." />
+              </SelectTrigger>
+              <SelectContent>
+                {employees.map((e) => (
+                  <SelectItem key={e.id} value={e.id}>
+                    {e.name}
                   </SelectItem>
                 ))}
               </SelectContent>

@@ -4,48 +4,48 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  --background: #eef5f9;
-  --foreground: #10202f;
+  --background: #f8fafc;
+  --foreground: #0f172a;
   --surface: #ffffff;
-  --surface-muted: #dfeaf0;
-  --muted-foreground: #5d7281;
-  --border: #c9d8e1;
-  --ring: #0ea5e9;
+  --surface-muted: #f1f5f9;
+  --muted-foreground: #64748b;
+  --border: #e2e8f0;
+  --ring: #6366f1;
 
   --primary-light: #818cf8;
   --primary: #4f46e5;
   --primary-dark: #3730a3;
 
-  --secondary-light: #c084fc;
-  --secondary: #9333ea;
-  --secondary-dark: #6b21a8;
+  --secondary-light: #7dd3fc;
+  --secondary: #0ea5e9;
+  --secondary-dark: #0369a1;
 
   --success-light: #6ee7b7;
-  --success: #16a34a;
-  --success-dark: #15803d;
+  --success: #10b981;
+  --success-dark: #047857;
 
   --warning-light: #fcd34d;
-  --warning: #d97706;
+  --warning: #f59e0b;
   --warning-dark: #b45309;
 
   --danger-light: #fca5a5;
-  --danger: #dc2626;
+  --danger: #ef4444;
   --danger-dark: #b91c1c;
 
   --neutral-light: #cbd5e1;
   --neutral: #475569;
-  --neutral-dark: #10202f;
+  --neutral-dark: #0f172a;
 
   --radius: 0.5rem;
 }
 
 .dark {
-  --background: #071016;
-  --foreground: #ecfeff;
-  --surface: #101d28;
-  --surface-muted: #172b38;
-  --muted-foreground: #a4b7c4;
-  --border: #24404f;
+  --background: #020617;
+  --foreground: #f8fafc;
+  --surface: #0f172a;
+  --surface-muted: #1e293b;
+  --muted-foreground: #94a3b8;
+  --border: #1e293b;
   --ring: #818cf8;
 }
 
@@ -146,23 +146,18 @@
   body {
     @apply min-h-screen bg-background font-sans text-foreground antialiased;
     background-image:
-      linear-gradient(
-        125deg,
-        color-mix(in srgb, var(--primary) 18%, transparent) 0%,
-        transparent 36%
+      radial-gradient(
+        circle at 15% 50%,
+        color-mix(in srgb, var(--primary) 12%, transparent),
+        transparent 25%
       ),
-      linear-gradient(
-        225deg,
-        color-mix(in srgb, var(--secondary) 18%, transparent) 0%,
-        transparent 42%
-      ),
-      linear-gradient(
-        180deg,
-        transparent 0%,
-        color-mix(in srgb, var(--warning) 7%, transparent) 100%
+      radial-gradient(
+        circle at 85% 30%,
+        color-mix(in srgb, var(--secondary) 15%, transparent),
+        transparent 25%
       );
     background-attachment: fixed;
-    background-size: auto;
+    background-size: cover;
   }
 
   a {
@@ -196,35 +191,17 @@
 
   .auth-backdrop {
     background-image:
-      linear-gradient(
-        120deg,
-        color-mix(in srgb, var(--primary) 24%, transparent),
-        transparent 38%
+      radial-gradient(
+        circle at 20% 40%,
+        color-mix(in srgb, var(--primary) 20%, transparent),
+        transparent 40%
       ),
-      linear-gradient(
-        235deg,
-        color-mix(in srgb, var(--secondary) 24%, transparent),
-        transparent 42%
-      ),
-      linear-gradient(
-        180deg,
-        color-mix(in srgb, var(--warning) 10%, transparent),
-        transparent 58%
+      radial-gradient(
+        circle at 80% 60%,
+        color-mix(in srgb, var(--secondary) 25%, transparent),
+        transparent 40%
       );
-  }
-
-  .fine-grid {
-    background-image:
-      linear-gradient(
-        color-mix(in srgb, var(--foreground) 7%, transparent) 1px,
-        transparent 1px
-      ),
-      linear-gradient(
-        90deg,
-        color-mix(in srgb, var(--foreground) 6%, transparent) 1px,
-        transparent 1px
-      );
-    background-size: 36px 36px;
+    background-size: cover;
   }
 
   .sidebar-layout {

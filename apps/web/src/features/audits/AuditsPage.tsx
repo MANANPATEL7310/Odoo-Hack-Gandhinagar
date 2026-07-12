@@ -3,7 +3,11 @@ import {
   getAuditsRepository,
   getOrgRepository,
 } from "@/services/data/repositories";
-import type { AuditCycle, Department } from "@/services/data/types/domain";
+import type {
+  AuditCycle,
+  Department,
+  Employee,
+} from "@/services/data/types/domain";
 import {
   Table,
   TableBody,
@@ -19,27 +23,38 @@ import { Button } from "../../components/ui/button";
 export function AuditsPage() {
   const [audits, setAudits] = useState<AuditCycle[]>([]);
   const [departments, setDepartments] = useState<Department[]>([]);
-  // We don't have a users repository yet, so we'll just mock the user display for now or leave it blank
+  const [employees, setEmployees] = useState<Employee[]>([]);
 
   useEffect(() => {
     async function loadData() {
       try {
-        const [auditsData, deptsData] = await Promise.all([
+        const [auditsData, deptsData, employeesData] = await Promise.all([
           getAuditsRepository()
             .listAuditCycles()
             .catch(() => []),
           getOrgRepository()
             .listDepartments()
             .catch(() => []),
+          getOrgRepository()
+            .listEmployees()
+            .catch(() => []),
         ]);
         setAudits(auditsData);
         setDepartments(deptsData);
+        setEmployees(employeesData);
       } catch (err) {
         console.error(err);
       }
     }
     loadData();
   }, []);
+
+  const refreshData = async () => {
+    const data = await getAuditsRepository()
+      .listAuditCycles()
+      .catch(() => []);
+    setAudits(data);
+  };
 
   return (
     <div className="space-y-6 p-2 lg:p-0">
@@ -75,7 +90,9 @@ export function AuditsPage() {
                 const dept = departments.find(
                   (x) => x.id === a.scopeDepartmentId,
                 );
-                const auditorName = "Auditor"; // Mapped from real user data when employee repository is available
+                const auditorName =
+                  employees.find((e) => e.id === a.conductedByEmployeeId)
+                    ?.name || "Unknown";
 
                 let badgeVariant: "default" | "success" | "warning" = "default";
                 if (a.status === "OPEN") badgeVariant = "warning";
@@ -101,8 +118,16 @@ export function AuditsPage() {
                         <Button
                           size="sm"
                           className="bg-primary text-white hover:bg-primary/90"
+                          onClick={async () => {
+                            try {
+                              await getAuditsRepository().closeAuditCycle(a.id);
+                              await refreshData();
+                            } catch (e) {
+                              console.error("Failed to close audit", e);
+                            }
+                          }}
                         >
-                          Continue
+                          Close Cycle
                         </Button>
                       )}
                       {a.status === "CLOSED" && (

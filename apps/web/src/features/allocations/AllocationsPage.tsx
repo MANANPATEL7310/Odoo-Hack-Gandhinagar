@@ -9,6 +9,7 @@ import type {
   TransferRequest,
   Asset,
   Department,
+  Employee,
 } from "@/services/data/types/domain";
 import { Tabs } from "../../components/ui/tabs";
 import { Button } from "../../components/ui/button";
@@ -31,36 +32,60 @@ export function AllocationsPage() {
   );
   const [assets, setAssets] = useState<Asset[]>([]);
   const [departments, setDepartments] = useState<Department[]>([]);
+  const [employees, setEmployees] = useState<Employee[]>([]);
   const [isFormOpen, setIsFormOpen] = useState(false);
 
   useEffect(() => {
     async function loadData() {
       try {
-        const [allocationsData, transfersData, assetsData, departmentsData] =
-          await Promise.all([
-            getAllocationsRepository()
-              .listAllocations()
-              .catch(() => []),
-            getAllocationsRepository()
-              .listTransferRequests()
-              .catch(() => []),
-            getAssetsRepository()
-              .listAssets()
-              .catch(() => []),
-            getOrgRepository()
-              .listDepartments()
-              .catch(() => []),
-          ]);
+        const [
+          allocationsData,
+          transfersData,
+          assetsData,
+          departmentsData,
+          employeesData,
+        ] = await Promise.all([
+          getAllocationsRepository()
+            .listAllocations()
+            .catch(() => []),
+          getAllocationsRepository()
+            .listTransferRequests()
+            .catch(() => []),
+          getAssetsRepository()
+            .listAssets()
+            .catch(() => []),
+          getOrgRepository()
+            .listDepartments()
+            .catch(() => []),
+          getOrgRepository()
+            .listEmployees()
+            .catch(() => []),
+        ]);
         setAllocations(allocationsData);
         setTransferRequests(transfersData);
         setAssets(assetsData);
         setDepartments(departmentsData);
+        setEmployees(employeesData);
       } catch (err) {
         console.error(err);
       }
     }
     loadData();
   }, []);
+
+  const refreshAllocations = async () => {
+    const data = await getAllocationsRepository()
+      .listAllocations()
+      .catch(() => []);
+    setAllocations(data);
+  };
+
+  const refreshTransfers = async () => {
+    const data = await getAllocationsRepository()
+      .listTransferRequests()
+      .catch(() => []);
+    setTransferRequests(data);
+  };
 
   const availableAssets = assets.filter((a) => a.status === "AVAILABLE");
 
@@ -70,11 +95,14 @@ export function AllocationsPage() {
         isOpen={isFormOpen}
         onClose={() => setIsFormOpen(false)}
         assets={availableAssets}
-        employees={[]}
+        employees={employees}
         onSubmit={async (payload) => {
-          console.log("Submit allocation", payload);
-          // In real implementation, call repository:
-          // await getAllocationsRepository().createAllocation(payload);
+          try {
+            await getAllocationsRepository().createAllocation(payload);
+            await refreshAllocations();
+          } catch (e) {
+            console.error("Failed to create allocation", e);
+          }
         }}
       />
 
@@ -117,7 +145,9 @@ export function AllocationsPage() {
                       <TableBody>
                         {allocations.map((a) => {
                           const asset = assets.find((x) => x.id === a.assetId);
-                          const holderName = "Employee";
+                          const holderName =
+                            employees.find((e) => e.id === a.holderEmployeeId)
+                              ?.name || "Unknown";
                           return (
                             <TableRow key={a.id}>
                               <TableCell className="font-medium">
@@ -144,6 +174,19 @@ export function AllocationsPage() {
                                     variant="ghost"
                                     size="sm"
                                     className="text-primary hover:text-primary/80"
+                                    onClick={async () => {
+                                      try {
+                                        await getAllocationsRepository().returnAllocation(
+                                          a.id,
+                                        );
+                                        await refreshAllocations();
+                                      } catch (e) {
+                                        console.error(
+                                          "Failed to return allocation",
+                                          e,
+                                        );
+                                      }
+                                    }}
                                   >
                                     <HandHeart className="mr-1 size-4" /> Return
                                   </Button>
@@ -177,7 +220,10 @@ export function AllocationsPage() {
                       <TableBody>
                         {transferRequests.map((tr) => {
                           const asset = assets.find((x) => x.id === tr.assetId);
-                          const requesterName = "Employee";
+                          const requesterName =
+                            employees.find(
+                              (e) => e.id === tr.requesterEmployeeId,
+                            )?.name || "Unknown";
                           const targetDept = departments.find(
                             (x) => x.id === tr.targetDepartmentId,
                           );
@@ -214,12 +260,38 @@ export function AllocationsPage() {
                                       variant="ghost"
                                       size="sm"
                                       className="text-danger hover:bg-danger/10 hover:text-danger"
+                                      onClick={async () => {
+                                        try {
+                                          await getAllocationsRepository().rejectTransferRequest(
+                                            tr.id,
+                                          );
+                                          await refreshTransfers();
+                                        } catch (e) {
+                                          console.error(
+                                            "Failed to reject transfer",
+                                            e,
+                                          );
+                                        }
+                                      }}
                                     >
                                       Reject
                                     </Button>
                                     <Button
                                       size="sm"
                                       className="bg-primary text-white hover:bg-primary/90"
+                                      onClick={async () => {
+                                        try {
+                                          await getAllocationsRepository().approveTransferRequest(
+                                            tr.id,
+                                          );
+                                          await refreshTransfers();
+                                        } catch (e) {
+                                          console.error(
+                                            "Failed to approve transfer",
+                                            e,
+                                          );
+                                        }
+                                      }}
                                     >
                                       Approve
                                     </Button>

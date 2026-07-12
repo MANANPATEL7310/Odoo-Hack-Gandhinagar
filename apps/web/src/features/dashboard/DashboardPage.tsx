@@ -7,33 +7,46 @@ import {
   CheckCircle2,
   Clock3,
   Gauge,
-  Laptop,
   Package,
   PenTool,
   Radar,
   ShieldCheck,
-  TrendingUp,
-  Wrench,
 } from "lucide-react";
 
-interface KPIResponse {
-  assetsAvailable: number;
-  assetsAllocated: number;
-  maintenanceToday: number;
-  activeBookings: number;
-  pendingTransfers: number;
-  upcomingReturns: number;
+interface DashboardResponse {
+  kpis: {
+    assetsAvailable: number;
+    assetsAllocated: number;
+    maintenanceToday: number;
+    activeBookings: number;
+    pendingTransfers: number;
+    upcomingReturns: number;
+  };
+  overdue: Array<{
+    id: string;
+    asset: { id: string; name: string; assetTag: string };
+    holderEmployee?: { id: string; name: string };
+    holderDepartment?: { id: string; name: string };
+    expectedReturnDate: string;
+  }>;
+  upcomingReturns: Array<{
+    id: string;
+    resourceAsset: { id: string; name: string; assetTag: string };
+    bookedBy: { id: string; name: string };
+    startTime: string;
+    endTime: string;
+  }>;
 }
 
 export function DashboardPage() {
-  const [kpis, setKpis] = useState<KPIResponse | null>(null);
+  const [data, setData] = useState<DashboardResponse | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function fetchDashboard() {
       try {
         const res = await api.get("/dashboard");
-        setKpis(res.data.data.kpis);
+        setData(res.data.data);
       } catch (error) {
         console.error("Failed to load dashboard data", error);
       } finally {
@@ -42,6 +55,8 @@ export function DashboardPage() {
     }
     fetchDashboard();
   }, []);
+
+  const kpis = data?.kpis;
 
   const totalTrackedAssets =
     (kpis?.assetsAvailable ?? 0) + (kpis?.assetsAllocated ?? 0);
@@ -113,41 +128,44 @@ export function DashboardPage() {
   ];
 
   const activityItems = [
-    {
-      title: "MacBook Pro 16 assigned",
-      meta: "Engineering inventory updated",
-      icon: Laptop,
-      tone: "text-primary",
-    },
-    {
-      title: "Projector X1 is bookable",
-      meta: "Conference assets marked ready",
-      icon: CheckCircle2,
+    ...(data?.overdue.slice(0, 2).map((item) => ({
+      title: `${item.asset.name} is Overdue`,
+      meta: `Expected back on ${new Date(item.expectedReturnDate).toLocaleDateString()}`,
+      icon: Clock3,
+      tone: "text-danger",
+    })) || []),
+    ...(data?.upcomingReturns.slice(0, 3).map((item) => ({
+      title: `${item.resourceAsset.name} booked`,
+      meta: `Booked by ${item.bookedBy.name} for ${new Date(item.startTime).toLocaleDateString()}`,
+      icon: CalendarClock,
       tone: "text-secondary",
-    },
-    {
-      title: "Maintenance window clear",
-      meta: "No service tickets scheduled today",
-      icon: Wrench,
-      tone: "text-warning",
-    },
+    })) || []),
   ];
+
+  if (activityItems.length === 0) {
+    activityItems.push({
+      title: "Maintenance window clear",
+      meta: "No service tickets or overdue items today",
+      icon: CheckCircle2,
+      tone: "text-success",
+    });
+  }
 
   const insightCards = [
     {
       label: "Overdue items",
-      value: "0",
+      value: String(data?.overdue.length || 0),
       icon: Clock3,
     },
     {
-      label: "Active signals",
-      value: "3",
+      label: "Upcoming bookings",
+      value: String(data?.upcomingReturns.length || 0),
       icon: Activity,
     },
     {
-      label: "Trend",
-      value: "Up",
-      icon: TrendingUp,
+      label: "Pending transfers",
+      value: String(kpis?.pendingTransfers || 0),
+      icon: ArrowRightLeft,
     },
   ];
 

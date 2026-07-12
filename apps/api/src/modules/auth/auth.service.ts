@@ -5,18 +5,7 @@ import { env } from "../../config/env.js";
 import { hashPassword, comparePassword } from "../../lib/hash.js";
 import type { SignupInput, LoginInput, ForgotPasswordInput, ResetPasswordInput } from "@template/shared";
 import type { Employee, Role } from "@prisma/client";
-
-// Custom API Errors
-export class AuthError extends Error {
-  constructor(
-    public status: number,
-    message: string,
-    public code?: string,
-  ) {
-    super(message);
-    this.name = "AuthError";
-  }
-}
+import { ConflictError, UnauthorizedError, ForbiddenError, BadRequestError } from "../../lib/errors.js";
 
 // In-memory store for password reset tokens (Hackathon MVP solution)
 const resetTokens = new Map<string, { email: string; expires: Date }>();
@@ -30,17 +19,9 @@ export class AuthService {
 
     if (existingEmployee) {
       if (existingEmployee.status === "INACTIVE") {
-        throw new AuthError(
-          403,
-          "Account is inactive. Please contact your administrator.",
-          "ACCOUNT_INACTIVE_CONTACT_ADMIN",
-        );
+        throw new ForbiddenError("Account is inactive. Please contact your administrator.");
       }
-      throw new AuthError(
-        409,
-        "Email address is already in use.",
-        "EMAIL_TAKEN",
-      );
+      throw new ConflictError("Email address is already in use.");
     }
 
     // 2. Hash password and save Employee record
@@ -78,18 +59,18 @@ export class AuthService {
     });
 
     if (!employee) {
-      throw new AuthError(401, "Invalid email or password.", "INVALID_CREDENTIALS");
+      throw new UnauthorizedError("Invalid email or password.");
     }
 
     // 2. Verify Hash
     const isPasswordMatch = await comparePassword(payload.password, employee.passwordHash);
     if (!isPasswordMatch) {
-      throw new AuthError(401, "Invalid email or password.", "INVALID_CREDENTIALS");
+      throw new UnauthorizedError("Invalid email or password.");
     }
 
     // 3. Check Status
     if (employee.status === "INACTIVE") {
-      throw new AuthError(403, "Account is inactive. Please contact admin.", "ACCOUNT_INACTIVE");
+      throw new ForbiddenError("Account is inactive. Please contact admin.");
     }
 
     // 4. Issue Token
@@ -133,7 +114,7 @@ export class AuthService {
     const record = resetTokens.get(payload.token);
     
     if (!record || record.expires.getTime() < Date.now()) {
-      throw new AuthError(400, "Reset token is invalid or has expired.", "INVALID_OR_EXPIRED_TOKEN");
+      throw new BadRequestError("Reset token is invalid or has expired.");
     }
 
     const employee = await db.employee.findUnique({
@@ -141,7 +122,7 @@ export class AuthService {
     });
 
     if (!employee || employee.status !== "ACTIVE") {
-      throw new AuthError(400, "Reset token is invalid or has expired.", "INVALID_OR_EXPIRED_TOKEN");
+      throw new BadRequestError("Reset token is invalid or has expired.");
     }
 
     const newPasswordHash = await hashPassword(payload.newPassword);
@@ -164,7 +145,7 @@ export class AuthService {
     });
 
     if (!employee || employee.status === "INACTIVE") {
-      throw new AuthError(401, "User is unauthenticated or deactivated.", "UNAUTHENTICATED");
+      throw new UnauthorizedError("User is unauthenticated or deactivated.");
     }
 
     return {
@@ -197,3 +178,12 @@ export class AuthService {
 }
 
 export const authService = new AuthService();
+
+// Backwards-compatibility aliases
+export async function loginService(payload: LoginInput) {
+  return authService.login(payload);
+}
+
+export async function signupService(payload: SignupInput) {
+  return authService.signup(payload);
+}

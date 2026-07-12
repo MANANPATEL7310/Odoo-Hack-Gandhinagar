@@ -20,7 +20,7 @@ export class LocalStorageService implements StorageService {
     // Save to apps/api/public/uploads
     const currentDir = path.dirname(new URL(import.meta.url).pathname);
     // Note: Adjusting path to resolve relative to apps/api
-    this.uploadDir = path.resolve(currentDir, "../../../../public/uploads");
+    this.uploadDir = path.resolve(currentDir, "../../../public/uploads");
     this.ensureDirectoryExists();
   }
 
